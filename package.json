@@ -1,0 +1,27 @@
+{
+  "name": "comtab",
+  "version": "1.0.0",
+  "description": "",
+  "main": "npx comtab.js",
+  "scripts": {
+    "start": "npm run dev:server",
+    "dev:server": "npx live-server --entry-file=src/comtab.html --browser=CHROME --watch=src --open=src",
+    "build": "npx npm-run-all build:*",
+    "build:js": "npx uglifyjs src/comtab.js -cmo dist/comtab.min.js --source-map \"filename='dist/comtab.min.js.map'\"",
+    "build:css": "npx csso src/comtab.css -o dist/comtab.min.css -s dist/comtab.min.css.map"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "csso-cli": "^3.0.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "live-server": "^1.2.1",
+    "npm-run-all": "^4.1.5",
+    "uglify-js": "^3.12.7"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

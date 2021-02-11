@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://apps.bdimg.com/libs/jqueryui/1.10.4/css/jquery-ui.min.css">
+  <link rel="stylesheet" href="./comtab.css">
+</head>
+<body>
+
+</body>
+</html>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.12.0/jquery-ui.js"></script>
+<script src="./comtab.js"></script>
+<script>
+  var tab1 = comtab.createTab($('<a>tab1</a>'), $('<div>content1</div>'))
+  var tab2 = comtab.createTab($('<a>tab2</a>'), $('<div>content2</div>'))
+  comtab.createPane([tab1, tab2]).mount()
+</script>

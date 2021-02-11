@@ -1,0 +1,48 @@
+.comtab-pane {
+  min-width: 200px;
+  width: 400px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: yellow;
+}
+
+.comtab-pane_handle {
+  background-color: green;
+  height: 20px;
+}
+
+.comtab-tab {
+  background-color: blue;
+}
+
+.comtab-tab_content {
+  display: none;
+}
+
+.comtab-tab_content-active {
+  display: block;
+}
+
+.comtab-tab_btn {
+  background-color: white;
+}
+
+.comtab-tab_btn-active {
+  opacity: .9;
+}
+
+.comtab-stage {
+  position: relative;
+  /* width: 500px;
+  height: 300px; */
+  background-color: violet;
+}
+
+html, body, .comtab-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
