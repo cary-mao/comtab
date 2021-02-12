@@ -17,5 +17,6 @@
 <script>
   var tab1 = comtab.createTab($('<a>tab1</a>'), $('<div>content1</div>'))
   var tab2 = comtab.createTab($('<a>tab2</a>'), $('<div>content2</div>'))
-  comtab.createPane([tab1, tab2]).mount()
+  var tab3 = comtab.createTab($('<a>tab3</a>'), $('<div>content3</div>'))
+  comtab.createPane([tab1, tab2, tab3]).mount()
 </script>

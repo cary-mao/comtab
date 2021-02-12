@@ -11,7 +11,6 @@ var comtab = (function ($, undefined) {
   var CLASSES = _createCLASSES('comtab')
   var STAGE_SELECTOR = 'body'
   var stage = $(STAGE_SELECTOR)
-  var paneMap = _createPureObject(null)
   var currentData = null
 
   stage.droppable({
@@ -59,15 +58,12 @@ var comtab = (function ($, undefined) {
       return this
     },
     setRestrictSize (size) {
-      this._minWidth = size.minWidth || this._minWidth
-      this._minHeight = size.minHeight || this._minHeight
-      this._maxWidth = size.maxWidth || this._maxWidth
-      this._maxHeight = size.maxHeight || this._maxHeight
-      this._resizable
-        .resizable('option', 'minWidth', this._minWidth)
-        .resizable('option', 'minHeight', this._minHeight)
-        .resizable('option', 'maxWidth', this._maxWidth)
-        .resizable('option', 'maxHeight', this._maxHeight)
+      var props = ['minWidth', 'minHeight', 'maxWidth', 'maxHeight']
+      var _this = this
+      props.forEach(function (p) {
+        var _p = '_' + p
+        _this._resizable.resizable('option', p, _this[_p] = size[p] || _this[_p])
+      })
     },
     setSize (w, h) {
       this._pane.css({
@@ -75,6 +71,9 @@ var comtab = (function ($, undefined) {
         height: h
       })
       return this
+    },
+    refreshZIndexCSS () {
+      this._pane.css('z-index', this.zIndex)
     },
     /**
      * *************************************
@@ -112,6 +111,7 @@ var comtab = (function ($, undefined) {
       this._initPaneEvent()
       this._initRestrictSize()
       this._mapDom()
+      this.refreshZIndexCSS()
     },
     _activeTab (tab) {
       tab.actived = true
@@ -127,10 +127,7 @@ var comtab = (function ($, undefined) {
       this.setRestrictSize(this._options)
     },
     _mapDom () {
-      var id = (new Date()).getTime().toString()
-      paneMap[id] = this
-      this._pane.data('pane-id', id)
-      this.id = id
+      this._pane.data('pane-id', this.id = PaneManager.addPane(this))
     },
     _initTabEvent (tab) {
       var _this = this
@@ -158,14 +155,12 @@ var comtab = (function ($, undefined) {
         containment: stage,
         handles: 'n, e, s, w, ne, se, sw, nw'
       })
-      // this._listeners = {
-      //   paneSelect () {
-      //     if (_this.zIndex) {
-  
-      //     }
-      //   }
-      // }
-      // this._pane.on('mousedown', this._listeners.paneSelect)
+      this._listeners = {
+        paneSelect () {
+          PaneManager.selectPane(_this)
+        }
+      }
+      this._pane.on('mousedown', this._listeners.paneSelect)
     },
     _clonePaneDomMap (tab) {
       var paneDomMap = this._createPaneDomMap()
@@ -213,18 +208,17 @@ var comtab = (function ($, undefined) {
    * *****************
    */
   Pane.createPaneByDomMap = function (paneDomMap, tabs) {
-    // fix Fn's name as Pane
-    var Fn = (function () {return function Pane () {}})()
-    Fn.prototype = Pane.prototype
-    Fn.prototype.constructor = Pane
-
-    var o = new Fn()
+    var o = new Pane._Fn()
     o._createPaneDomMap = function () {return paneDomMap}
     Pane.call(o, tabs)
     delete o._createPaneDomMap
 
     return o
   }
+  // fix Fn's name as Pane
+  Pane._Fn = function Pane () {}
+  Pane._Fn.prototype = Pane.prototype
+  Pane._Fn.constructor = Pane
 
   function createTab (btn, content, actived) {
     content.addClass(CLASSES.TAB_CONTENT)
@@ -278,6 +272,36 @@ var comtab = (function ($, undefined) {
     }
     
     return Object.create(null, description)
+  }
+
+  var PaneManager = {
+    paneMap: _createPureObject(null),
+    paneCount: 0,
+    addPane (pane) {
+      var id = (new Date()).getTime()
+      this.paneMap[id] = pane
+      pane.zIndex = this.paneCount++
+      return id
+    },
+    removePane (id) {
+      delete this.paneMap[id]
+      this.paneCount--
+    },
+    selectPane (pane) {
+      var topZIndex = this.paneCount - 1
+      // not the top-level layer
+      if (pane.zIndex !== topZIndex) {
+        for (var k in this.paneMap) {
+          var v = this.paneMap[k]
+          if (v.zIndex > pane.zIndex) {
+            v.zIndex--
+            v.refreshZIndexCSS()
+          }
+        }
+        pane.zIndex = topZIndex
+        pane.refreshZIndexCSS()
+      }
+    }
   }
 
   return {
