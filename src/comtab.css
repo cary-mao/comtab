@@ -12,6 +12,10 @@
   height: 20px;
 }
 
+.comtab-tab_header-active {
+  background: orange;
+}
+
 .comtab-tab {
   background-color: blue;
 }

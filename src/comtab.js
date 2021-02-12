@@ -17,6 +17,12 @@ var comtab = (function ($, undefined) {
     drop (event, ui) {
       if (currentData.type === CLASSES.TAB_BTN) {
         currentData.pane.removeTab(currentData.tab)
+        if (currentData.pane.tabs.length < 2) {
+          currentData.pane.tabs[0]._draggable.draggable('disable')
+        }
+        if (currentData.tab.actived) {
+          currentData.pane._activeTab(currentData.pane.tabs[0])
+        }
         setTimeout(function () {
           Pane
             .createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
@@ -48,6 +54,11 @@ var comtab = (function ($, undefined) {
       this.tabs.splice(this.tabs.indexOf(tab), 1)
       tab.content.remove()
       tab.btn.remove()
+    },
+    addTab (tab) {
+      this.tabs.push(tab)
+      this._tabHeader.append(tab.btn)
+      this._pane.append(tab.content)
     },
     setPosition (position) {
       this._pane.css({
@@ -103,6 +114,10 @@ var comtab = (function ($, undefined) {
           _this._activeTab(activedTab = tab)
         }
       })
+
+      if (this.tabs.length < 2) {
+        this.tabs[0]._draggable.draggable('disable')
+      }
   
       if (!activedTab) {
         this._activeTab(activedTab = this.tabs[0])
@@ -129,16 +144,58 @@ var comtab = (function ($, undefined) {
     _mapDom () {
       this._pane.data('pane-id', this.id = PaneManager.addPane(this))
     },
+    _concatPane (pane) {
+      var _this = this
+      PaneManager.removePane(pane.id)
+      this.tabs.forEach(function (tab) {
+        if (tab.actived) {
+          _this._deactiveTab(tab)
+        }
+      })
+      if (this.tabs.length < 2) {
+        this.tabs[0]._draggable.draggable('enable')
+      }
+      pane.tabs.forEach(function (tab) {
+        _this.addTab(tab)
+        // reset draggable because the `_this` point to the old pane
+        tab._draggable.draggable('destroy')
+        _this._initTabEvent(tab)
+      })
+      pane._pane.remove()
+    },
     _initTabEvent (tab) {
       var _this = this
       tab._draggable = tab.btn.draggable({
-        appendTo: 'body',
-        helper (event, ui) {
+        appendTo: stage,
+        helper () {
           tab._tpl =  _this._cloneTab(tab)
           _this._tplPaneMap = _this._clonePaneDomMap(tab._tpl)
           _this._activeTab(tab._tpl)
           currentData = _createPureObject({pane: _this, tab: tab, type: CLASSES.TAB_BTN})
           return _this._tplPaneMap.pane
+        },
+        drag (event) {
+          var oPane = currentData.overedPane
+          if (oPane) {
+            var tabHeader = oPane._tabHeader
+            var point = _transformPoint({x: event.pageX, y: event.pageY}, oPane._pane.offset())
+            // now, focus on the bound box of oPane
+            var tabHeaderBound = tabHeader.position()
+            tabHeaderBound.width = tabHeader.outerWidth()
+            tabHeaderBound.height = tabHeader.outerHeight()
+
+            var inHeader = _isPointInArea(point, tabHeaderBound)
+            var changeState = currentData.inOveredTabHeader ^ inHeader
+            currentData.inOveredTabHeader = inHeader
+
+            if (changeState) {
+              if (inHeader) {
+                tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
+              } else {
+                tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
+              }
+            }
+          }
         }
       })
     },
@@ -148,16 +205,92 @@ var comtab = (function ($, undefined) {
         appendTo: stage,
         handle: this._paneHandle,
         start () {
-          currentData = _createPureObject({type: CLASSES.PANE})
+          currentData = _createPureObject({type: CLASSES.PANE, pane: _this})
+        },
+        drag (event) {
+          var oPane = currentData.overedPane
+          if (oPane) {
+            var tabHeader = oPane._tabHeader
+            var point = _transformPoint({x: event.pageX, y: event.pageY}, oPane._pane.offset())
+            // now, focus on the bound box of oPane
+            var tabHeaderBound = tabHeader.position()
+            tabHeaderBound.width = tabHeader.outerWidth()
+            tabHeaderBound.height = tabHeader.outerHeight()
+
+            var inHeader = _isPointInArea(point, tabHeaderBound)
+            var changeState = currentData.inOveredTabHeader ^ inHeader
+            currentData.inOveredTabHeader = inHeader
+
+            if (changeState) {
+              if (inHeader) {
+                tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
+              } else {
+                tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
+              }
+            }
+          }
         }
       })
       this._resizable = this._pane.resizable({
         containment: stage,
         handles: 'n, e, s, w, ne, se, sw, nw'
       })
+      this._droppable = this._pane.droppable({
+        greedy: true,
+        tolerance: 'pointer',
+        over () {
+          currentData.overedPane = _this
+        },
+        out () {
+          currentData.overedPane = null
+          if (currentData.inOveredTabHeader) {
+            _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
+            currentData.inOveredTabHeader = false
+          }
+        },
+        drop (event) {
+          // remove class and configure data
+          if (currentData.inOveredTabHeader) {
+            _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
+            currentData.inOveredTabHeader = false
+          }
+
+          // if drop pane to tab header
+          if (currentData.type === CLASSES.PANE) {
+            _this._concatPane(currentData.pane)
+          }
+          // if drop temporary pane to tab header
+          else if (currentData.type === CLASSES.TAB_BTN) {
+            if (currentData.pane !== _this) {
+              var pane = Pane.createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
+              _this._concatPane(pane)
+              currentData.pane.removeTab(currentData.tab)
+              if (currentData.pane.tabs.length < 2) {
+                currentData.pane.tabs[0]._draggable.draggable('disable')
+              }
+              if (currentData.tab.actived) {
+                currentData.pane._activeTab(currentData.pane.tabs[0])
+              }
+            }
+          }
+        }
+      })
       this._listeners = {
-        paneSelect () {
+        paneSelect (event) {
           PaneManager.selectPane(_this)
+          var target = $(event.target)
+          var id = target.data('tab-id')
+          if (id) {
+            var tab = _this.tabs.filter(function (t) {return t.id === id})[0]
+            if (tab && !tab.actived) {
+              _this.tabs.forEach(function (t) {
+                if (t.actived) {
+                  _this._deactiveTab(t)
+                }
+              })
+              _this._activeTab(tab)
+            }
+          }
         }
       }
       this._pane.on('mousedown', this._listeners.paneSelect)
@@ -181,6 +314,7 @@ var comtab = (function ($, undefined) {
       this._tabHeader.append(tab.btn)
     },
     _normalizeOptions (options) {
+      options = options || {}
       var defaultOptions = _createPureObject({
         minWidth: 100,
         minHeight: 60
@@ -221,17 +355,20 @@ var comtab = (function ($, undefined) {
   Pane._Fn.constructor = Pane
 
   function createTab (btn, content, actived) {
-    content.addClass(CLASSES.TAB_CONTENT)
-    btn.addClass(CLASSES.TAB_BTN)
+    var id = _genId()
+    content.addClass(CLASSES.TAB_CONTENT).data('tab-id', id)
+    btn.addClass(CLASSES.TAB_BTN).data('tab-id', id)
+
     return _createPureObject({
+      id: id,
       btn: btn,
       content: content,
       _actived: !!actived
     })
   }
 
-  function createPane (tabs) {
-    return new Pane(tabs)
+  function createPane (tabs, options) {
+    return new Pane(tabs, options)
   }
 
   function _createCLASSES (prefix) {
@@ -274,23 +411,43 @@ var comtab = (function ($, undefined) {
     return Object.create(null, description)
   }
 
+  function _isNumberInInterval (num, interval) {
+    return num >= interval[0] && num <= interval[1]
+  }
+
+  function _transformPoint (point, area) {
+    point.x -= area.left
+    point.y -= area.top
+    return point
+  }
+
+  function _isPointInArea (point, area) {
+    return _isNumberInInterval(point.x, [area.left, area.left + area.width])
+      && _isNumberInInterval(point.y, [area.top, area.top + area.height])
+  }
+
   var PaneManager = {
     paneMap: _createPureObject(null),
     paneCount: 0,
+    topZIndex: 0,
     addPane (pane) {
-      var id = (new Date()).getTime()
+      var id = _genId()
       this.paneMap[id] = pane
-      pane.zIndex = this.paneCount++
+      this.topZIndex = pane.zIndex = this.paneCount++
       return id
     },
     removePane (id) {
+      // normalize pane layer
+      // only keep the max zindex correct, not reset
+      if (this.topZIndex === this.paneMap[id].zIndex) {
+        this.topZIndex--
+      }
       delete this.paneMap[id]
       this.paneCount--
     },
     selectPane (pane) {
-      var topZIndex = this.paneCount - 1
       // not the top-level layer
-      if (pane.zIndex !== topZIndex) {
+      if (pane.zIndex !== this.topZIndex) {
         for (var k in this.paneMap) {
           var v = this.paneMap[k]
           if (v.zIndex > pane.zIndex) {
@@ -298,10 +455,32 @@ var comtab = (function ($, undefined) {
             v.refreshZIndexCSS()
           }
         }
-        pane.zIndex = topZIndex
+        pane.zIndex = this.topZIndex
         pane.refreshZIndexCSS()
       }
     }
+  }
+
+  function _genId () {
+    var len = 32
+    var radix = 16
+    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')
+    var uuid = [], i
+    radix = radix || chars.length
+    if(len) {
+      for(i = 0; i < len; i++)uuid[i] = chars[0 | Math.random() * radix]
+    } else {
+      var r
+      uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-'
+      uuid[14] = '4'
+      for (i = 0; i < 36; i++) {
+        if(!uuid[i]) {
+          r = 0 | Math.random() * 16
+          uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r]
+        }
+      }
+    }
+    return uuid.join('')
   }
 
   return {

@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jquery": "^3.5.5",
     "csso-cli": "^3.0.0",
     "cz-conventional-changelog": "^3.3.0",
     "live-server": "^1.2.1",
