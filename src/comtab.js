@@ -23,11 +23,15 @@ var comtab = (function ($, undefined) {
         if (currentData.tab.actived) {
           currentData.pane._activeTab(currentData.pane.tabs[0])
         }
+        // after drag-stop
         setTimeout(function () {
           Pane
             .createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
             .setPosition(ui.offset)
             .mount()
+          // fix:bug tab-id will be losed, because of the helper will be removed by draggable
+          currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
+          currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
         })
       }
     }
@@ -167,6 +171,7 @@ var comtab = (function ($, undefined) {
       var _this = this
       tab._draggable = tab.btn.draggable({
         appendTo: stage,
+        addClasses: false,
         helper () {
           tab._tpl =  _this._cloneTab(tab)
           _this._tplPaneMap = _this._clonePaneDomMap(tab._tpl)
@@ -204,6 +209,7 @@ var comtab = (function ($, undefined) {
       this._draggable = this._pane.draggable({
         appendTo: stage,
         handle: this._paneHandle,
+        addClasses: false,
         start () {
           currentData = _createPureObject({type: CLASSES.PANE, pane: _this})
         },
@@ -232,11 +238,13 @@ var comtab = (function ($, undefined) {
         }
       })
       this._resizable = this._pane.resizable({
+        addClasses: false,
         containment: stage,
         handles: 'n, e, s, w, ne, se, sw, nw'
       })
       this._droppable = this._pane.droppable({
         greedy: true,
+        addClasses: false,
         tolerance: 'pointer',
         over () {
           currentData.overedPane = _this
