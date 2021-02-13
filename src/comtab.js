@@ -14,15 +14,10 @@ var comtab = (function ($, undefined) {
   var currentData = null
 
   stage.droppable({
+    addClasses: false,
     drop (event, ui) {
       if (currentData.type === CLASSES.TAB_BTN) {
-        currentData.pane.removeTab(currentData.tab)
-        if (currentData.pane.tabs.length < 2) {
-          currentData.pane.tabs[0]._draggable.draggable('disable')
-        }
-        if (currentData.tab.actived) {
-          currentData.pane._activeTab(currentData.pane.tabs[0])
-        }
+        _commonTabBtnDrop()
         // after drag-stop
         setTimeout(function () {
           Pane
@@ -180,27 +175,7 @@ var comtab = (function ($, undefined) {
           return _this._tplPaneMap.pane
         },
         drag (event) {
-          var oPane = currentData.overedPane
-          if (oPane) {
-            var tabHeader = oPane._tabHeader
-            var point = _transformPoint({x: event.pageX, y: event.pageY}, oPane._pane.offset())
-            // now, focus on the bound box of oPane
-            var tabHeaderBound = tabHeader.position()
-            tabHeaderBound.width = tabHeader.outerWidth()
-            tabHeaderBound.height = tabHeader.outerHeight()
-
-            var inHeader = _isPointInArea(point, tabHeaderBound)
-            var changeState = currentData.inOveredTabHeader ^ inHeader
-            currentData.inOveredTabHeader = inHeader
-
-            if (changeState) {
-              if (inHeader) {
-                tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
-              } else {
-                tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
-              }
-            }
-          }
+          _commonActiveTabHeaderDrag(event)
         }
       })
     },
@@ -214,27 +189,7 @@ var comtab = (function ($, undefined) {
           currentData = _createPureObject({type: CLASSES.PANE, pane: _this})
         },
         drag (event) {
-          var oPane = currentData.overedPane
-          if (oPane) {
-            var tabHeader = oPane._tabHeader
-            var point = _transformPoint({x: event.pageX, y: event.pageY}, oPane._pane.offset())
-            // now, focus on the bound box of oPane
-            var tabHeaderBound = tabHeader.position()
-            tabHeaderBound.width = tabHeader.outerWidth()
-            tabHeaderBound.height = tabHeader.outerHeight()
-
-            var inHeader = _isPointInArea(point, tabHeaderBound)
-            var changeState = currentData.inOveredTabHeader ^ inHeader
-            currentData.inOveredTabHeader = inHeader
-
-            if (changeState) {
-              if (inHeader) {
-                tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
-              } else {
-                tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
-              }
-            }
-          }
+          _commonActiveTabHeaderDrag(event)
         }
       })
       this._resizable = this._pane.resizable({
@@ -251,17 +206,11 @@ var comtab = (function ($, undefined) {
         },
         out () {
           currentData.overedPane = null
-          if (currentData.inOveredTabHeader) {
-            _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
-            currentData.inOveredTabHeader = false
-          }
+          _commonCancelOveredTabHeader(_this)
         },
-        drop (event) {
+        drop () {
           // remove class and configure data
-          if (currentData.inOveredTabHeader) {
-            _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
-            currentData.inOveredTabHeader = false
-          }
+          _commonCancelOveredTabHeader(_this)
 
           // if drop pane to tab header
           if (currentData.type === CLASSES.PANE) {
@@ -272,13 +221,7 @@ var comtab = (function ($, undefined) {
             if (currentData.pane !== _this) {
               var pane = Pane.createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
               _this._concatPane(pane)
-              currentData.pane.removeTab(currentData.tab)
-              if (currentData.pane.tabs.length < 2) {
-                currentData.pane.tabs[0]._draggable.draggable('disable')
-              }
-              if (currentData.tab.actived) {
-                currentData.pane._activeTab(currentData.pane.tabs[0])
-              }
+              _commonTabBtnDrop()
             }
           }
         }
@@ -360,7 +303,7 @@ var comtab = (function ($, undefined) {
   // fix Fn's name as Pane
   Pane._Fn = function Pane () {}
   Pane._Fn.prototype = Pane.prototype
-  Pane._Fn.constructor = Pane
+  Pane._Fn.constructor = PaneW
 
   function createTab (btn, content, actived) {
     var id = _genId()
@@ -489,6 +432,50 @@ var comtab = (function ($, undefined) {
       }
     }
     return uuid.join('')
+  }
+
+  /**
+   * There are the methods that only extract the common logic.
+   */
+  function _commonTabBtnDrop () {
+    currentData.pane.removeTab(currentData.tab)
+    if (currentData.pane.tabs.length < 2) {
+      currentData.pane.tabs[0]._draggable.draggable('disable')
+    }
+    if (currentData.tab.actived) {
+      currentData.pane._activeTab(currentData.pane.tabs[0])
+    }
+  }
+
+  function _commonActiveTabHeaderDrag (event) {
+    var oPane = currentData.overedPane
+    if (oPane) {
+      var tabHeader = oPane._tabHeader
+      var point = _transformPoint({x: event.pageX, y: event.pageY}, oPane._pane.offset())
+      // now, focus on the bound box of oPane
+      var tabHeaderBound = tabHeader.position()
+      tabHeaderBound.width = tabHeader.outerWidth()
+      tabHeaderBound.height = tabHeader.outerHeight()
+
+      var inHeader = _isPointInArea(point, tabHeaderBound)
+      var changeState = currentData.inOveredTabHeader ^ inHeader
+      currentData.inOveredTabHeader = inHeader
+
+      if (changeState) {
+        if (inHeader) {
+          tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
+        } else {
+          tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
+        }
+      }
+    }
+  }
+
+  function _commonCancelOveredTabHeader (pane) {
+    if (currentData.inOveredTabHeader) {
+      pane._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
+      currentData.inOveredTabHeader = false
+    }
   }
 
   return {
