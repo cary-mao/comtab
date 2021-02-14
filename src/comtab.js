@@ -86,6 +86,21 @@ var comtab = (function ($, undefined) {
       this._pane.css('z-index', this.zIndex)
     },
     /**
+     * The method to save the pane's position information in json
+     * please sure that your tab has tag attribute
+     */
+    toJSON () {
+      var position = this._pane.position()
+      var tabs = this.tabs.map(function (tab) {
+        return tab._options
+      })
+      return {
+        position: position,
+        options: this._options,
+        tabs: tabs
+      }
+    },
+    /**
      * *************************************
      * private methods
      * There are all methods in Pane which only used in plugin
@@ -258,7 +273,10 @@ var comtab = (function ($, undefined) {
       return paneDomMap
     },
     _cloneTab (tab) {
-      return createTab(tab.btn.clone(), tab.content.clone())
+      return createTab(tab.btn.clone(), tab.content.clone(), {
+        actived: tab.actived,
+        tag: tab.tag
+      })
     },
     _appendTab (tab) {
       this._pane.append(tab.content)
@@ -266,6 +284,7 @@ var comtab = (function ($, undefined) {
     },
     _normalizeOptions (options) {
       options = options || {}
+      this._options = options
       var defaultOptions = _createPureObject({
         minWidth: 100,
         minHeight: 60
@@ -300,26 +319,63 @@ var comtab = (function ($, undefined) {
 
     return o
   }
-  // fix Fn's name as Pane
-  Pane._Fn = function Pane () {}
-  Pane._Fn.prototype = Pane.prototype
-  Pane._Fn.constructor = PaneW
 
-  function createTab (btn, content, actived) {
+  /**
+   * In order to simplify logic, you should provide a map for tab
+   */
+  Pane.parseJSON = function (json, tabMap, autoMount) {
+    autoMount = autoMount || true
+    var pane = createPane(json.tabs.map(function (tabJSON) {
+      var tab = tabMap[tabJSON.tag]
+      return createTab(tab.btn, tab.content, tab.options)
+    }), json.options).setPosition(json.position)
+
+    autoMount && pane.mount()
+
+    return pane
+  }
+
+  Pane._Fn = function Pane () {}
+  _inheritPrototype(Pane._Fn, Pane)
+  // Pane._Fn should be new the instance of Pane, not the instance of sub class of Pane
+  Pane._Fn.prototype = Pane.prototype
+
+  function _inheritPrototype (Sub, Sup) {
+    var prototype = Object.create(Sup.prototype)
+    Sub.prototype = prototype
+    prototype.constructor = Sub
+  }
+
+  function createTab (btn, content, options) {
+    options = options || {}
     var id = _genId()
+    var _actived = !!options.actived
+    var _tag = options.tag
     content.addClass(CLASSES.TAB_CONTENT).data('tab-id', id)
     btn.addClass(CLASSES.TAB_BTN).data('tab-id', id)
+
+    if (_actived) {
+      btn.addClass(CLASSES.TAB_BTN_ACTIVE)
+      content.addClass(CLASSES.TAB_CONTENT_ACTIVE)
+    }
 
     return _createPureObject({
       id: id,
       btn: btn,
       content: content,
-      _actived: !!actived
+      _options: options,
+      _tag: _tag,
+      _actived: _actived
     })
   }
 
   function createPane (tabs, options) {
     return new Pane(tabs, options)
+  }
+
+  function setStageBySelector (selector) {
+    STAGE_SELECTOR = selector
+    stage = $(selector)
   }
 
   function _createCLASSES (prefix) {
@@ -435,6 +491,30 @@ var comtab = (function ($, undefined) {
   }
 
   /**
+   * The method that export all position information in stage
+   */
+  function toJSON () {
+    var panes = []
+    for (var k in PaneManager.paneMap) {
+      var v = PaneManager.paneMap[k]
+      panes.push(v.toJSON())
+    }
+    return {
+      stage: STAGE_SELECTOR,
+      panes: panes
+    }
+  }
+
+  function parseJSON (json, tabMap, autoMount) {
+    stage !== STAGE_SELECTOR && setStageBySelector(json.stage)
+    var panes = json.panes.map(function (paneJSON) {
+      return Pane.parseJSON(paneJSON, tabMap, autoMount)
+    })
+
+    return panes
+  }
+
+  /**
    * There are the methods that only extract the common logic.
    */
   function _commonTabBtnDrop () {
@@ -480,7 +560,11 @@ var comtab = (function ($, undefined) {
 
   return {
     createPane,
-    createTab
+    createTab,
+    setStageBySelector,
+    Pane,
+    parseJSON,
+    toJSON
   }
 
 })(window.$ || window.jQurey)
