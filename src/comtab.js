@@ -36,6 +36,14 @@ var comtab = (function ($, undefined) {
     this.tabs = tabs
     this._normalizeOptions(options)
     this._init()
+
+    if (this._options.autoMount) {
+      this.mount()
+    }
+
+    if (this._options.width || this._options.height) {
+      this.setSize(this._options.width, this._options.height)
+    }
   }
 
   Pane.prototype = {
@@ -91,12 +99,21 @@ var comtab = (function ($, undefined) {
      */
     toJSON () {
       var position = this._pane.position()
+      var width = this._pane.width()
+      var height = this._pane.height()
       var tabs = this.tabs.map(function (tab) {
-        return tab._options
+        var options = _createPureObject(tab._options)
+        // some properties in actual time
+        options.actived = tab.actived
+        return options
       })
+      var options = _createPureObject(this._options)
+      delete options.autoMount
+      options.width = width
+      options.height = height
       return {
         position: position,
-        options: this._options,
+        options: options,
         tabs: tabs
       }
     },
@@ -124,7 +141,7 @@ var comtab = (function ($, undefined) {
           return
         }
   
-        if (tab._actived) {
+        if (tab.actived) {
           _this._activeTab(activedTab = tab)
         }
       })
@@ -273,10 +290,7 @@ var comtab = (function ($, undefined) {
       return paneDomMap
     },
     _cloneTab (tab) {
-      return createTab(tab.btn.clone(), tab.content.clone(), {
-        actived: tab.actived,
-        tag: tab.tag
-      })
+      return createTab(tab.btn.clone(), tab.content.clone(), tab._options)
     },
     _appendTab (tab) {
       this._pane.append(tab.content)
@@ -286,6 +300,7 @@ var comtab = (function ($, undefined) {
       options = options || {}
       this._options = options
       var defaultOptions = _createPureObject({
+        autoMount: false,
         minWidth: 100,
         minHeight: 60
       })
@@ -324,13 +339,11 @@ var comtab = (function ($, undefined) {
    * In order to simplify logic, you should provide a map for tab
    */
   Pane.parseJSON = function (json, tabMap, autoMount) {
-    autoMount = autoMount || true
+    json.options.autoMount = autoMount === undefined ? true : autoMount
     var pane = createPane(json.tabs.map(function (tabJSON) {
       var tab = tabMap[tabJSON.tag]
-      return createTab(tab.btn, tab.content, tab.options)
+      return createTab(tab.btn, tab.content, tabJSON)
     }), json.options).setPosition(json.position)
-
-    autoMount && pane.mount()
 
     return pane
   }
@@ -349,12 +362,12 @@ var comtab = (function ($, undefined) {
   function createTab (btn, content, options) {
     options = options || {}
     var id = _genId()
-    var _actived = !!options.actived
-    var _tag = options.tag
+    var actived = !!options.actived
+    var tag = options.tag
     content.addClass(CLASSES.TAB_CONTENT).data('tab-id', id)
     btn.addClass(CLASSES.TAB_BTN).data('tab-id', id)
 
-    if (_actived) {
+    if (actived) {
       btn.addClass(CLASSES.TAB_BTN_ACTIVE)
       content.addClass(CLASSES.TAB_CONTENT_ACTIVE)
     }
@@ -364,8 +377,8 @@ var comtab = (function ($, undefined) {
       btn: btn,
       content: content,
       _options: options,
-      _tag: _tag,
-      _actived: _actived
+      tag: tag,
+      actived: actived
     })
   }
 
@@ -404,7 +417,8 @@ var comtab = (function ($, undefined) {
     var description = {}
     if (obj) {
       for (var k in obj) {
-        if (obj.hasOwnProperty(k)) {
+        // fix:bug if obj is a pure object, it hasn't hasOwnProperty
+        if (!obj.hasOwnProperty || obj.hasOwnProperty(k)) {
           description[k] = {
             value: obj[k],
             writable: true,

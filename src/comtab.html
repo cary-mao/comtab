@@ -9,13 +9,19 @@
 </head>
 <body>
   <button id="clearJSONConf">clear</button>
-  <p id="JSONConfContent"></p>
+  <button id="saveJSONConf">save</button>
+  <pre id="JSONConfContent"></pre>
 </body>
 </html>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.12.0/jquery-ui.js"></script>
 <script src="./comtab.js"></script>
 <script>
+  $('#clearJSONConf').on('click', function () {
+    localStorage.removeItem('JSONConf')
+  })
+  $('#saveJSONConf').on('click', saveJSONConf)
+
   var tab1 = comtab.createTab($('<a>tab1</a>'), $('<div>content1</div>'), {tag: 'tab1'})
   var tab2 = comtab.createTab($('<a>tab2</a>'), $('<div>content2</div>'), {tag: 'tab2'})
   var tab3 = comtab.createTab($('<a>tab3</a>'), $('<div>content3</div>'), {tag: 'tab3'})
@@ -31,19 +37,17 @@
   var jsonConfInLocalStorage = localStorage.getItem('JSONConf')
 
   if (jsonConfInLocalStorage) {
-    comtab.parseJSON(JSON.parse(jsonConfInLocalStorage), tabMap)
+    var json = JSON.parse(jsonConfInLocalStorage)
+    comtab.parseJSON(json, tabMap)
+    $('#JSONConfContent').text(JSON.stringify(json, null, 2))
   } else {
     comtab.createPane([tab1, tab2, tab3]).mount()
-    var pane = comtab.createPane([tab4]).setPosition({left: 200, top: 200}).mount()
-
-    var json = comtab.toJSON()
-
-    localStorage.setItem('JSONConf', JSON.stringify(json))
-
-    $('#JSONConfContent').text(JSON.stringify(json, 2))
+    comtab.createPane([tab4]).setPosition({left: 200, top: 200}).mount()
   }
-  
-  $('#clearJSONConf').on('click', function () {
-    localStorage.removeItem('JSONConf')
-  })
+
+  function saveJSONConf () {
+    var json = comtab.toJSON()
+    localStorage.setItem('JSONConf', JSON.stringify(json))
+    $('#JSONConfContent').text(JSON.stringify(json, null, 2))
+  }
 </script>
