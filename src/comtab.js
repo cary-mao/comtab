@@ -205,9 +205,6 @@ var comtab = (function ($, undefined) {
           _this._activeTab(tab._tpl)
           currentData = _createPureObject({pane: _this, tab: tab, type: CLASSES.TAB_BTN})
           return _this._tplPaneMap.pane
-        },
-        drag (event) {
-          _commonActiveTabHeaderDrag(event)
         }
       })
     },
@@ -219,9 +216,6 @@ var comtab = (function ($, undefined) {
         addClasses: false,
         start () {
           currentData = _createPureObject({type: CLASSES.PANE, pane: _this})
-        },
-        drag (event) {
-          _commonActiveTabHeaderDrag(event)
         }
       })
       this._resizable = this._pane.resizable({
@@ -229,21 +223,11 @@ var comtab = (function ($, undefined) {
         containment: stage,
         handles: 'n, e, s, w, ne, se, sw, nw'
       })
-      this._droppable = this._pane.droppable({
+      this._tabHeaderDroppable = this._tabHeader.droppable({
         greedy: true,
-        addClasses: false,
+        hoverClass: CLASSES.TAB_HEADER_ACTIVE,
         tolerance: 'pointer',
-        over () {
-          currentData.overedPane = _this
-        },
-        out () {
-          currentData.overedPane = null
-          _commonCancelOveredTabHeader(_this)
-        },
         drop () {
-          // remove class and configure data
-          _commonCancelOveredTabHeader(_this)
-
           // if drop pane to tab header
           if (currentData.type === CLASSES.PANE) {
             _this._concatPane(currentData.pane)
@@ -432,21 +416,6 @@ var comtab = (function ($, undefined) {
     return Object.create(null, description)
   }
 
-  function _isNumberInInterval (num, interval) {
-    return num >= interval[0] && num <= interval[1]
-  }
-
-  function _transformPoint (point, area) {
-    point.x -= area.left
-    point.y -= area.top
-    return point
-  }
-
-  function _isPointInArea (point, area) {
-    return _isNumberInInterval(point.x, [area.left, area.left + area.width])
-      && _isNumberInInterval(point.y, [area.top, area.top + area.height])
-  }
-
   var PaneManager = {
     paneMap: _createPureObject(null),
     paneCount: 0,
@@ -538,37 +507,6 @@ var comtab = (function ($, undefined) {
     }
     if (currentData.tab.actived) {
       currentData.pane._activeTab(currentData.pane.tabs[0])
-    }
-  }
-
-  function _commonActiveTabHeaderDrag (event) {
-    var oPane = currentData.overedPane
-    if (oPane) {
-      var tabHeader = oPane._tabHeader
-      var point = _transformPoint({x: event.pageX, y: event.pageY}, oPane._pane.offset())
-      // now, focus on the bound box of oPane
-      var tabHeaderBound = tabHeader.position()
-      tabHeaderBound.width = tabHeader.outerWidth()
-      tabHeaderBound.height = tabHeader.outerHeight()
-
-      var inHeader = _isPointInArea(point, tabHeaderBound)
-      var changeState = currentData.inOveredTabHeader ^ inHeader
-      currentData.inOveredTabHeader = inHeader
-
-      if (changeState) {
-        if (inHeader) {
-          tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
-        } else {
-          tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
-        }
-      }
-    }
-  }
-
-  function _commonCancelOveredTabHeader (pane) {
-    if (currentData.inOveredTabHeader) {
-      pane._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
-      currentData.inOveredTabHeader = false
     }
   }
 
