@@ -69,7 +69,7 @@ var comtab = (function ($, undefined) {
     },
     setPosition (position) {
       this._pane.css({
-        position: 'absolute',
+        position: 'fixed',
         left: position.left + 'px',
         top: position.top + 'px'
       })
@@ -214,6 +214,7 @@ var comtab = (function ($, undefined) {
         appendTo: stage,
         handle: this._paneHandle,
         addClasses: false,
+        scroll: false,
         start () {
           currentData = _createPureObject({type: CLASSES.PANE, pane: _this})
         }
@@ -227,6 +228,12 @@ var comtab = (function ($, undefined) {
         greedy: true,
         hoverClass: CLASSES.TAB_HEADER_ACTIVE,
         tolerance: 'pointer',
+        over () {
+          currentData.pane._pane.addClass(CLASSES.PANE_DROP_READY)
+        },
+        out () {
+          currentData.pane._pane.removeClass(CLASSES.PANE_DROP_READY)
+        },
         drop () {
           // if drop pane to tab header
           if (currentData.type === CLASSES.PANE) {
@@ -242,6 +249,7 @@ var comtab = (function ($, undefined) {
           }
         }
       })
+      this._initAbsorbEvent()
       this._listeners = {
         paneSelect (event) {
           PaneManager.selectPane(_this)
@@ -261,6 +269,51 @@ var comtab = (function ($, undefined) {
         }
       }
       this._pane.on('mousedown', this._listeners.paneSelect)
+    },
+    _initAbsorbEvent () {
+      var _this = this
+      var absorbs = [
+        ['top', 'horizontal'],
+        ['left', 'vertical'],
+        ['bottom', 'horizontal'],
+        ['right', 'vertical']
+      ]
+      _this._absorbs = {}
+      absorbs.forEach(function (absorb) {
+        var direction = absorb[0]
+        var lineDirection = absorb[1]
+        _this._absorbs[direction] = $(
+          '<div class="' +
+          CLASSES['ABSORB_' + lineDirection.toUpperCase()] + ' ' +
+          CLASSES.ABSORB + ' ' +
+          CLASSES['ABSORB_' + direction.toUpperCase()] +
+          '"></div>'
+        ).droppable({
+          hoverClass: CLASSES.ABSORB_ACTIVE,
+          tolerance: 'pointer',
+          over () {
+            currentData.pane._pane.addClass(CLASSES.PANE_DROP_READY)
+          },
+          out () {
+            currentData.pane._pane.removeClass(CLASSES.PANE_DROP_READY)
+          },
+          drop () {
+            var type = currentData.type
+            var pane = _this.topPane = currentData.pane
+            var group = _this._group
+  
+            if (type === CLASSES.PANE) {
+              if (!group) {
+                group = new PaneGroup().addPane(_this).mount()
+              }
+              
+              group.addPane(pane, _this, direction)
+              pane._pane.removeClass(CLASSES.PANE_DROP_READY)
+            }
+          }
+        })
+        _this._pane.append(_this._absorbs[direction])
+      })
     },
     _clonePaneDomMap (tab) {
       var paneDomMap = this._createPaneDomMap()
@@ -286,7 +339,9 @@ var comtab = (function ($, undefined) {
       var defaultOptions = _createPureObject({
         autoMount: false,
         minWidth: 100,
-        minHeight: 60
+        minHeight: 60,
+        absorbDistance: 10,
+        absorbOrigin: 'center'
       })
       this._options = Object.assign(defaultOptions, options)
     },
@@ -337,6 +392,143 @@ var comtab = (function ($, undefined) {
   // Pane._Fn should be new the instance of Pane, not the instance of sub class of Pane
   Pane._Fn.prototype = Pane.prototype
 
+  /**
+   * Pane Group
+   */
+  function PaneGroup () {
+    this._panes = []
+    this._init()
+  }
+
+  PaneGroup.prototype = {
+    _init () {
+      var _this = this
+      this.id = _genId()
+      this._group = $('<div class="comtab-pane-group"></div>')
+      this._draggable = this._group.draggable({
+        handle: '.' + CLASSES.PANE_HANDLE,
+        scroll: false,
+        drag (event, ui) {
+          var distance = {
+            left: ui.originalPosition.left - ui.position.left,
+            top: ui.originalPosition.top - ui.position.top
+          }
+
+          _this._panes.forEach(function (pane) {
+            var offset = pane._originalOffset
+            pane.setPosition({
+              left: distance.left === 0 ? undefined : offset.left - distance.left,
+              top: distance.top === 0 ? undefined : offset.top - distance.top
+            })
+          })
+        },
+        stop () {
+          _this._panes.forEach(function (pane) {
+            pane._originalOffset = pane._pane.offset()
+          })
+        }
+      }).css('position', 'static')
+    },
+    addPane (pane, refPane, direction) {
+      pane._group = this 
+
+      if (!this._panes.length) {
+        pane._originalOffset = pane._pane.offset()
+        this._panes.push(pane)
+        this._group.append(pane._pane)
+        pane._draggable.draggable('disable')
+        pane._resizable.resizable('disable')
+        return this
+      }
+
+      if (direction === 'top') {
+        refPane.linkTop = pane
+        pane.linkBottom = refPane
+        var refOffset = refPane._pane.offset()
+        pane._pane.css({
+          width: refPane._pane.width(),
+          // height: refPane._pane.height(),
+          left: refOffset.left,
+          top: refOffset.top - refPane._pane.height()
+        })
+      } else if (direction === 'bottom') {
+        refPane.linkBottom = pane
+        pane.linkTop = refPane
+        var refOffset = refPane._pane.offset()
+        pane._pane.css({
+          width: refPane._pane.width(),
+          // height: refPane._pane.height(),
+          left: refOffset.left,
+          top: refOffset.top + refPane._pane.height()
+        })
+      } else if (direction === 'left') {
+        refPane.linkRight = pane
+        pane.linkLeft = refPane
+        var refOffset = refPane._pane.offset()
+        pane._pane.css({
+          // width: refPane._pane.width(),
+          // height: refPane._pane.height(),
+          left: refOffset.left - refPane._pane.width(),
+          top: refOffset.top
+        })
+      } else if (direction === 'right') {
+        refPane.linkLeft = pane
+        pane.linkRight = refPane
+        var refOffset = refPane._pane.offset()
+        pane._pane.css({
+          // width: refPane._pane.width(),
+          // height: refPane._pane.height(),
+          left: refOffset.left + refPane._pane.width(),
+          top: refOffset.top
+        })
+      }
+
+      pane._draggable.draggable('disable')
+      pane._resizable.resizable('disable')
+      this._panes.push(pane)
+      this._group.append(pane._pane)
+      pane._originalOffset = pane._pane.offset()
+
+      return this
+    },
+    mount () {
+      stage.append(this._group)
+      return this
+    }
+  }
+
+  function PaneGutter (gutter) {
+    this._gutter = gutter
+    this._init()
+  }
+
+  PaneGutter.prototype = {
+    _init () {
+      var _this = this
+      var gutter = this._gutter
+      gutter.droppable({
+        greedy: true,
+        hoverClass: 'comtab-pane_gutter-active',
+        tolerance: 'pointer',
+        drop () {
+          var pane = currentData.pane
+          gutter.css('width', pane._pane.outerWidth()).append(pane._pane)
+          pane._gutter = _this
+          pane._pane.css({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            height: '100%'
+          })
+        }
+      })
+      gutter.resizable({
+        handles: 'w',
+        alsoResize: '.' + CLASSES.PANE
+      })
+    }
+  }
+
   function _inheritPrototype (Sub, Sup) {
     var prototype = Object.create(Sup.prototype)
     Sub.prototype = prototype
@@ -370,6 +562,10 @@ var comtab = (function ($, undefined) {
     return new Pane(tabs, options)
   }
 
+  function createGutter (gutter) {
+    return new PaneGutter(gutter)
+  }
+
   function setStageBySelector (selector) {
     STAGE_SELECTOR = selector
     stage = $(selector)
@@ -378,21 +574,32 @@ var comtab = (function ($, undefined) {
   function _createCLASSES (prefix) {
     var pane = prefix + '-pane'
     var paneHandle = pane + '_handle'
+    var paneDropReady = pane + '-dropready'
     var tab = prefix + '-tab'
     var tabHeader = tab + '_header'
     var tabContent = tab + '_content'
     var tabBtn = tab + '_btn'
+    var absorb = prefix + '-absorb'
+    var absorbVertical = absorb + '-vertical'
+    var absorbHorizontal = absorb + '-horizontal'
     var CLASSES = _createPureObject({
       PANE: pane,
       PANE_HANDLE: paneHandle,
       TAB: tab,
       TAB_HEADER: tabHeader,
       TAB_CONTENT: tabContent,
-      TAB_BTN: tabBtn
+      TAB_BTN: tabBtn,
+      ABSORB: absorb
     })
     for (var k in CLASSES) {
       CLASSES[k + '_ACTIVE'] = CLASSES[k] + '-active'
     }
+    CLASSES.ABSORB_VERTICAL = absorbVertical
+    CLASSES.ABSORB_HORIZONTAL = absorbHorizontal
+    ;['top', 'right', 'left', 'bottom'].forEach(function (direction) {
+      CLASSES['ABSORB_' + direction.toUpperCase()] = absorb + '_' + direction
+    })
+    CLASSES.PANE_DROP_READY = paneDropReady
 
     return CLASSES
   }
@@ -513,6 +720,7 @@ var comtab = (function ($, undefined) {
   return {
     createPane,
     createTab,
+    createGutter,
     setStageBySelector,
     Pane,
     parseJSON,

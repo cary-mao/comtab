@@ -6,11 +6,21 @@
   <title>Document</title>
   <link rel="stylesheet" href="https://apps.bdimg.com/libs/jqueryui/1.10.4/css/jquery-ui.min.css">
   <link rel="stylesheet" href="./comtab.css">
+  <style>
+    .gutter {
+      position: absolute;
+      width: 2px;
+      height: 100%;
+      top: 0;
+      right: 0;
+    }
+  </style>
 </head>
 <body>
   <button id="clearJSONConf">clear</button>
   <button id="saveJSONConf">save</button>
   <pre id="JSONConfContent"></pre>
+  <div class="gutter"></div>
 </body>
 </html>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
@@ -35,6 +45,8 @@
   }
 
   var jsonConfInLocalStorage = localStorage.getItem('JSONConf')
+
+  comtab.createGutter($('.gutter'))
 
   if (jsonConfInLocalStorage) {
     var json = JSON.parse(jsonConfInLocalStorage)
