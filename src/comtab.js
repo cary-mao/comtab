@@ -9,12 +9,16 @@ var comtab = (function ($, undefined) {
   }
 
   var CLASSES = _createCLASSES('comtab')
+  var TYPES = {
+    REMOVE_FROM_COLUMN: 'remove_from_column'
+  }
   var STAGE_SELECTOR = 'body'
   var stage = $(STAGE_SELECTOR)
   var currentData = null
 
   stage.droppable({
     addClasses: false,
+    scope: 'droppable',
     drop (event, ui) {
       if (currentData.type === CLASSES.TAB_BTN) {
         _commonTabBtnDrop()
@@ -69,7 +73,7 @@ var comtab = (function ($, undefined) {
     },
     setPosition (position) {
       this._pane.css({
-        position: 'fixed',
+        position: 'absolute',
         left: position.left + 'px',
         top: position.top + 'px'
       })
@@ -134,7 +138,6 @@ var comtab = (function ($, undefined) {
   
       this.tabs.forEach(function (tab) {
         _this._appendTab(tab)
-        _this._initTabEvent(tab)
   
         if (activedTab && tab.actived) {
           _this._deactiveTab(tab)
@@ -145,19 +148,19 @@ var comtab = (function ($, undefined) {
           _this._activeTab(activedTab = tab)
         }
       })
-
-      if (this.tabs.length < 2) {
-        this.tabs[0]._draggable.draggable('disable')
-      }
   
       if (!activedTab) {
         this._activeTab(activedTab = this.tabs[0])
       }
   
       this._initPaneEvent()
+      this._strictEventIfSingleTab()
       this._initRestrictSize()
       this._mapDom()
       this.refreshZIndexCSS()
+    },
+    _strictEventIfSingleTab () {
+      this._tabHeaderDraggable.draggable(this.tabs.length < 2 ? 'disable' : 'enable')
     },
     _activeTab (tab) {
       tab.actived = true
@@ -183,40 +186,38 @@ var comtab = (function ($, undefined) {
           _this._deactiveTab(tab)
         }
       })
-      if (this.tabs.length < 2) {
-        this.tabs[0]._draggable.draggable('enable')
-      }
+      this._strictEventIfSingleTab()
       pane.tabs.forEach(function (tab) {
         _this.addTab(tab)
-        // reset draggable because the `_this` point to the old pane
-        tab._draggable.draggable('destroy')
-        _this._initTabEvent(tab)
       })
       pane._pane.remove()
     },
-    _initTabEvent (tab) {
+    _initPaneEvent () {
       var _this = this
-      tab._draggable = tab.btn.draggable({
+      this._tabHeaderDraggable = this._tabHeader.draggable({
+        handle: '.' + CLASSES.TAB_BTN,
         appendTo: stage,
-        addClasses: false,
-        helper () {
+        scope: 'droppable',
+        helper (event) {
+          var originEvent = event.originalEvent
+          var tab = _this.tabs.filter(tab => tab.btn[0] === event.target)[0]
           tab._tpl =  _this._cloneTab(tab)
           _this._tplPaneMap = _this._clonePaneDomMap(tab._tpl)
           _this._activeTab(tab._tpl)
-          currentData = _createPureObject({pane: _this, tab: tab, type: CLASSES.TAB_BTN})
-          return _this._tplPaneMap.pane
+          currentData = _createPureObject({pane: _this, tab: tab, type: CLASSES.TAB_BTN, wrap: _this._tplPaneMap.pane})
+          return _this._tplPaneMap.pane.css({
+            'z-index': PaneManager.topZIndex + 1
+          })
         }
       })
-    },
-    _initPaneEvent () {
-      var _this = this
       this._draggable = this._pane.draggable({
         appendTo: stage,
         handle: this._paneHandle,
         addClasses: false,
         scroll: false,
+        scope: 'droppable',
         start () {
-          currentData = _createPureObject({type: CLASSES.PANE, pane: _this})
+          currentData = _createPureObject({type: CLASSES.PANE, pane: _this, wrap: _this._pane})
         }
       })
       this._resizable = this._pane.resizable({
@@ -228,13 +229,15 @@ var comtab = (function ($, undefined) {
         greedy: true,
         hoverClass: CLASSES.TAB_HEADER_ACTIVE,
         tolerance: 'pointer',
+        scope: 'droppable',
         over () {
-          currentData.pane._pane.addClass(CLASSES.PANE_DROP_READY)
+          currentData.wrap.addClass(CLASSES.PANE_DROP_READY)
         },
         out () {
-          currentData.pane._pane.removeClass(CLASSES.PANE_DROP_READY)
+          currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
         },
         drop () {
+          currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
           // if drop pane to tab header
           if (currentData.type === CLASSES.PANE) {
             _this._concatPane(currentData.pane)
@@ -291,24 +294,32 @@ var comtab = (function ($, undefined) {
         ).droppable({
           hoverClass: CLASSES.ABSORB_ACTIVE,
           tolerance: 'pointer',
+          greedy: true,
+          scope: 'droppable',
           over () {
-            currentData.pane._pane.addClass(CLASSES.PANE_DROP_READY)
+            currentData.wrap.addClass(CLASSES.PANE_DROP_READY)
           },
           out () {
-            currentData.pane._pane.removeClass(CLASSES.PANE_DROP_READY)
+            currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
           },
-          drop () {
+          drop (event, ui) {
             var type = currentData.type
-            var pane = _this.topPane = currentData.pane
-            var group = _this._group
+
+            currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
   
             if (type === CLASSES.PANE) {
-              if (!group) {
-                group = new PaneGroup().addPane(_this).mount()
-              }
-              
-              group.addPane(pane, _this, direction)
-              pane._pane.removeClass(CLASSES.PANE_DROP_READY)
+              combinePane(currentData.pane, _this, direction)
+            } else if (type === CLASSES.TAB_BTN) {
+              _commonTabBtnDrop()
+              setTimeout(function () {
+                var pane = Pane.createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
+                  .setSize(currentData.pane._pane.outerWidth(), currentData.pane._pane.outerHeight())
+                  .setPosition(ui.offset)
+                combinePane(pane, _this, direction)
+                // fix:bug tab-id will be losed, because of the helper will be removed by draggable
+                currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
+                currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
+              })
             }
           }
         })
@@ -392,140 +403,228 @@ var comtab = (function ($, undefined) {
   // Pane._Fn should be new the instance of Pane, not the instance of sub class of Pane
   Pane._Fn.prototype = Pane.prototype
 
-  /**
-   * Pane Group
-   */
-  function PaneGroup () {
-    this._panes = []
-    this._init()
-  }
+  function combinePane (pane, host, direction) {
+    // sure host group
+    surePaneGroup(host)
+    
+    if (direction === 'top' || direction === 'bottom') {
+      host._column.addPane(pane, host, direction)
+      pane._column = host._column
+      pane._group = host._group
+      return
+    }
 
-  PaneGroup.prototype = {
-    _init () {
-      var _this = this
-      this.id = _genId()
-      this._group = $('<div class="comtab-pane-group"></div>')
-      this._draggable = this._group.draggable({
-        handle: '.' + CLASSES.PANE_HANDLE,
-        scroll: false,
-        drag (event, ui) {
-          var distance = {
-            left: ui.originalPosition.left - ui.position.left,
-            top: ui.originalPosition.top - ui.position.top
-          }
+    if (direction === 'left' || direction === 'right') {
+      surePaneColumn(pane)
+      host._group.addColumn(pane._column, host._column, direction)
+      // pane._column = host._column
+      pane._group = host._group
+      return
+    }
 
-          _this._panes.forEach(function (pane) {
-            var offset = pane._originalOffset
-            pane.setPosition({
-              left: distance.left === 0 ? undefined : offset.left - distance.left,
-              top: distance.top === 0 ? undefined : offset.top - distance.top
-            })
-          })
-        },
-        stop () {
-          _this._panes.forEach(function (pane) {
-            pane._originalOffset = pane._pane.offset()
-          })
-        }
-      }).css('position', 'static')
-    },
-    addPane (pane, refPane, direction) {
-      pane._group = this 
-
-      if (!this._panes.length) {
-        pane._originalOffset = pane._pane.offset()
-        this._panes.push(pane)
-        this._group.append(pane._pane)
-        pane._draggable.draggable('disable')
-        pane._resizable.resizable('disable')
-        return this
+    function surePaneGroup (pane) {
+      if (!pane._group) {
+        pane._group = new PaneGroup()
+        pane._column = new PaneColumn()
+        pane._column.addPane(pane)
+        pane._group.addColumn(pane._column)
+        pane._column.init()
+        pane._group.init().mount()
       }
+    }
 
-      if (direction === 'top') {
-        refPane.linkTop = pane
-        pane.linkBottom = refPane
-        var refOffset = refPane._pane.offset()
-        pane._pane.css({
-          width: refPane._pane.width(),
-          // height: refPane._pane.height(),
-          left: refOffset.left,
-          top: refOffset.top - refPane._pane.height()
-        })
-      } else if (direction === 'bottom') {
-        refPane.linkBottom = pane
-        pane.linkTop = refPane
-        var refOffset = refPane._pane.offset()
-        pane._pane.css({
-          width: refPane._pane.width(),
-          // height: refPane._pane.height(),
-          left: refOffset.left,
-          top: refOffset.top + refPane._pane.height()
-        })
-      } else if (direction === 'left') {
-        refPane.linkRight = pane
-        pane.linkLeft = refPane
-        var refOffset = refPane._pane.offset()
-        pane._pane.css({
-          // width: refPane._pane.width(),
-          // height: refPane._pane.height(),
-          left: refOffset.left - refPane._pane.width(),
-          top: refOffset.top
-        })
-      } else if (direction === 'right') {
-        refPane.linkLeft = pane
-        pane.linkRight = refPane
-        var refOffset = refPane._pane.offset()
-        pane._pane.css({
-          // width: refPane._pane.width(),
-          // height: refPane._pane.height(),
-          left: refOffset.left + refPane._pane.width(),
-          top: refOffset.top
-        })
+    function surePaneColumn (pane) {
+      if (!pane._column) {
+        pane._column = new PaneColumn()
+        pane._column.addPane(pane)
+        pane._column.init()
       }
-
-      pane._draggable.draggable('disable')
-      pane._resizable.resizable('disable')
-      this._panes.push(pane)
-      this._group.append(pane._pane)
-      pane._originalOffset = pane._pane.offset()
-
-      return this
-    },
-    mount () {
-      stage.append(this._group)
-      return this
     }
   }
 
-  function PaneGutter (gutter) {
-    this._gutter = gutter
-    this._init()
+  function PaneColumn () {
+    this._panes = []
   }
 
-  PaneGutter.prototype = {
-    _init () {
-      var _this = this
-      var gutter = this._gutter
-      gutter.droppable({
-        greedy: true,
-        hoverClass: 'comtab-pane_gutter-active',
-        tolerance: 'pointer',
-        drop () {
-          var pane = currentData.pane
-          gutter.css('width', pane._pane.outerWidth()).append(pane._pane)
-          pane._gutter = _this
-          pane._pane.css({
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            height: '100%'
-          })
+  PaneColumn.prototype = {
+    init () {
+      var firstPane = this._panes[0]
+
+      // calculate position and size
+      var position = firstPane._pane.position()
+      var width = firstPane._pane.outerWidth()
+      var height = firstPane._pane.outerHeight()
+
+      // add pane to wrap
+      var wrap = this._wrap = $('<div class="' + CLASSES.PANE_GROUP_COLUMN + '"></div>')
+      wrap.append(firstPane._pane)
+      wrap.css({
+        width: width,
+        height: height,
+        left: position.left,
+        top: position.top
+      })
+
+      this._initEvent()
+      this._inited = true
+    },
+    addPane (pane, host, direction) {
+      if (this._panes.length < 1) {
+        this._panes.push(pane)
+        return
+      }
+
+      var index = this._panes.indexOf(host)
+
+      if (index < 0) return
+
+      if (direction === 'top') {
+        this._panes.splice(index, 0, pane)
+      } else if (direction === 'bottom') {
+        this._panes.splice(index + 1, 0, pane)
+      }
+      console.log(pane.tabs)
+
+      this._wrap.append(pane._pane)
+      this.refresh()
+    },
+    refresh () {
+      var maxWidth = 0
+      var wholeHeight = 0
+      var handleHeight = this._panes[0]._paneHandle.outerHeight()
+      this._panes.forEach(function (pane, i) {
+        var width = pane._pane.outerWidth()
+        var height = pane._pane.outerHeight()
+
+        if (i > 0) {
+          if (!pane._paneHandle.data('display')) {
+            pane._paneHandle.data('display', 'none').css('display', 'none')
+            height = height - handleHeight
+          }
+          pane._absorbs['top'].droppable('disable')
+        } else {
+          pane._paneHandle.css('display', 'block')
+          pane._absorbs['top'].droppable('enable')
+        }
+
+        pane._draggable.draggable('disable').resizable('disable')
+
+        pane._pane.css({
+          left: 0,
+          top: wholeHeight,
+          height: height
+        })
+        wholeHeight += height
+        if (maxWidth < width) {
+          maxWidth = width
         }
       })
-      gutter.resizable({
-        handles: 'w',
-        alsoResize: '.' + CLASSES.PANE
+      this._panes.forEach(function (pane) {
+        pane._pane.css({
+          width: maxWidth
+        })
       })
+      this._wrap.css({
+        height: wholeHeight
+      })
+    },
+    mount (group) {
+      group._wrap.append(this._wrap)
+      this.refresh()
+      this._mounted = true
+    },
+    _initEvent () {
+      var _this = this
+      this._draggable = this._wrap.draggable({
+        handle: '.' + CLASSES.TAB_HEADER,
+        helper (event) {
+          var pane = _this._panes.filter(function (pane) {
+            return pane._tabHeader[0] === event.target
+          })[0]
+          return pane._pane
+        }
+      })
+    }
+  }
+
+  function PaneGroup () {
+    this._columns = []
+  }
+
+  PaneGroup.prototype = {
+    init () {
+      this._wrap = $('<div class="' + CLASSES.PANE_GROUP + '"></div>')
+      this._inited = true
+      return this
+    },
+    addColumn (column, host, direction) {
+      if (this._columns.length < 1) {
+        this._columns.push(column)
+        return
+      }
+      var index = this._columns.indexOf(host)
+
+      if (direction === 'left') {
+        this._columns.splice(index, 0, column)
+        this.onChangeLeftPosition(column)
+      } else if (direction === 'right') {
+        this._columns.splice(index + 1, 0, column)
+      }
+
+      column.mount(this)
+      this.refreshColumnsPosition()
+    },
+    onChangeLeftPosition (column) {
+      var width = column._wrap.outerWidth()
+      var wrapPosition = this._wrap.position()
+      this._wrap.css({
+        left: wrapPosition.left - width
+      })
+    },
+    refreshColumnsPosition () {
+      var wholeWidth = 0
+      this._columns.forEach(function (column) {
+        column._wrap.css({
+          left: wholeWidth,
+          top: 0
+        })
+        wholeWidth = column._wrap.outerWidth() + wholeWidth
+      })
+    },
+    initColumnsPosition () {
+      var groupPosition = this._wrap.position()
+      this._columns.forEach(function (column) {
+        var position = column._wrap.position()
+        column._wrap.css({
+          left: position.left - groupPosition.left,
+          top: position.top - groupPosition.top
+        })
+      })
+    },
+    initEvent () {
+      var _this = this
+      this._draggable = this._wrap.draggable({
+        handle: '.' + CLASSES.PANE_HANDLE,
+        start () {
+          currentData = _createPureObject({type: CLASSES.PANE_GROUP, wrap: _this._wrap, group: _this})
+        }
+      })
+    },
+    mount () {
+      // must mount before column
+      stage.append(this._wrap)
+      this._columns[0].mount(this)
+      this.initEvent()
+
+      // set position
+      var position = this._columns[0]._wrap.position()
+      this._wrap.css({
+        left: position.left,
+        top: position.top 
+      })
+      this.initColumnsPosition()
+
+      this._mounted = true
     }
   }
 
@@ -562,10 +661,6 @@ var comtab = (function ($, undefined) {
     return new Pane(tabs, options)
   }
 
-  function createGutter (gutter) {
-    return new PaneGutter(gutter)
-  }
-
   function setStageBySelector (selector) {
     STAGE_SELECTOR = selector
     stage = $(selector)
@@ -575,6 +670,8 @@ var comtab = (function ($, undefined) {
     var pane = prefix + '-pane'
     var paneHandle = pane + '_handle'
     var paneDropReady = pane + '-dropready'
+    var paneGroup = pane + '-group'
+    var paneGroupColumn = paneGroup + '_column'
     var tab = prefix + '-tab'
     var tabHeader = tab + '_header'
     var tabContent = tab + '_content'
@@ -585,6 +682,7 @@ var comtab = (function ($, undefined) {
     var CLASSES = _createPureObject({
       PANE: pane,
       PANE_HANDLE: paneHandle,
+      PANE_GROUP: paneGroup,
       TAB: tab,
       TAB_HEADER: tabHeader,
       TAB_CONTENT: tabContent,
@@ -600,6 +698,7 @@ var comtab = (function ($, undefined) {
       CLASSES['ABSORB_' + direction.toUpperCase()] = absorb + '_' + direction
     })
     CLASSES.PANE_DROP_READY = paneDropReady
+    CLASSES.PANE_GROUP_COLUMN = paneGroupColumn
 
     return CLASSES
   }
@@ -709,9 +808,7 @@ var comtab = (function ($, undefined) {
    */
   function _commonTabBtnDrop () {
     currentData.pane.removeTab(currentData.tab)
-    if (currentData.pane.tabs.length < 2) {
-      currentData.pane.tabs[0]._draggable.draggable('disable')
-    }
+    currentData.pane._strictEventIfSingleTab()
     if (currentData.tab.actived) {
       currentData.pane._activeTab(currentData.pane.tabs[0])
     }
@@ -720,7 +817,6 @@ var comtab = (function ($, undefined) {
   return {
     createPane,
     createTab,
-    createGutter,
     setStageBySelector,
     Pane,
     parseJSON,

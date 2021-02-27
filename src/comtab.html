@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <link rel="stylesheet" href="https://apps.bdimg.com/libs/jqueryui/1.10.4/css/jquery-ui.min.css">
+  <!-- <link rel="stylesheet" href="https://apps.bdimg.com/libs/jqueryui/1.10.4/css/jquery-ui.min.css"> -->
   <link rel="stylesheet" href="./comtab.css">
   <style>
     .gutter {
@@ -23,8 +23,8 @@
   <div class="gutter"></div>
 </body>
 </html>
-<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.12.0/jquery-ui.js"></script>
+<script src="./vendor/jquery.js"></script>
+<script src="./vendor/jquery-ui.js"></script>
 <script src="./comtab.js"></script>
 <script>
   $('#clearJSONConf').on('click', function () {
@@ -36,17 +36,23 @@
   var tab2 = comtab.createTab($('<a>tab2</a>'), $('<div>content2</div>'), {tag: 'tab2'})
   var tab3 = comtab.createTab($('<a>tab3</a>'), $('<div>content3</div>'), {tag: 'tab3'})
   var tab4 = comtab.createTab($('<a>tab4</a>'), $('<div>content4</div>'), {tag: 'tab4'})
+  var tab5 = comtab.createTab($('<a>tab5</a>'), $('<div>content5</div>'), {tag: 'tab5'})
+  var tab6 = comtab.createTab($('<a>tab6</a>'), $('<div>content6</div>'), {tag: 'tab6'})
+  var tab7 = comtab.createTab($('<a>tab7</a>'), $('<div>content7</div>'), {tag: 'tab7'})
 
   var tabMap = {
     tab1: tab1,
     tab2: tab2,
     tab3: tab3,
-    tab4: tab4
+    tab4: tab4,
+    tab5: tab5,
+    tab6: tab6,
+    tab7: tab7
   }
 
   var jsonConfInLocalStorage = localStorage.getItem('JSONConf')
 
-  comtab.createGutter($('.gutter'))
+  // comtab.createGutter($('.gutter'))
 
   if (jsonConfInLocalStorage) {
     var json = JSON.parse(jsonConfInLocalStorage)
@@ -54,7 +60,7 @@
     $('#JSONConfContent').text(JSON.stringify(json, null, 2))
   } else {
     comtab.createPane([tab1, tab2, tab3]).mount()
-    comtab.createPane([tab4]).setPosition({left: 200, top: 200}).mount()
+    comtab.createPane([tab4, tab5, tab6, tab7]).setPosition({left: 200, top: 200}).mount()
   }
 
   function saveJSONConf () {

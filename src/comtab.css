@@ -1,13 +1,21 @@
 .comtab-pane {
   min-width: 200px;
   width: 400px;
-  position: fixed;
+  position: absolute;
   left: 0;
   top: 0;
   background-color: yellow;
 }
 
+.comtab-disable {
+  display: none;
+}
+
 .comtab-pane-group {
+  position: absolute;
+}
+
+.comtab-pane-group_column {
   position: absolute;
 }
 
