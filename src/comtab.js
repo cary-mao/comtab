@@ -10,10 +10,10 @@ var comtab = (function ($, undefined) {
 
   var CLASSES = _createCLASSES('comtab')
   var TYPES = {
-    REMOVE_FROM_COLUMN: 'remove_from_column'
+    REMOVE_PANE_FROM_COLUMN: 'remove_from_column',
   }
   var STAGE_SELECTOR = 'body'
-  var stage = $(STAGE_SELECTOR)
+  var stage = $(STAGE_SELECTOR).addClass('comtab-stage')
   var currentData = null
 
   stage.droppable({
@@ -24,14 +24,18 @@ var comtab = (function ($, undefined) {
         _commonTabBtnDrop()
         // after drag-stop
         setTimeout(function () {
-          Pane
+          var pane = Pane
             .createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
             .setPosition(ui.offset)
             .mount()
+          pane._paneHandle.show()
           // fix:bug tab-id will be losed, because of the helper will be removed by draggable
           currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
           currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
         })
+      } else if (currentData.type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+        currentData.column.freePane(currentData.pane)
+        currentData.pane.setPosition(ui.position).mount()
       }
     }
   })
@@ -135,6 +139,7 @@ var comtab = (function ($, undefined) {
       this._pane = paneDomMap.pane
       this._paneHandle = paneDomMap.paneHandle
       this._tabHeader = paneDomMap.tabHeader
+      this._tabHeaderDrop = paneDomMap.tabHeaderDrop
   
       this.tabs.forEach(function (tab) {
         _this._appendTab(tab)
@@ -186,10 +191,10 @@ var comtab = (function ($, undefined) {
           _this._deactiveTab(tab)
         }
       })
-      this._strictEventIfSingleTab()
       pane.tabs.forEach(function (tab) {
         _this.addTab(tab)
       })
+      this._strictEventIfSingleTab()
       pane._pane.remove()
     },
     _initPaneEvent () {
@@ -197,12 +202,19 @@ var comtab = (function ($, undefined) {
       this._tabHeaderDraggable = this._tabHeader.draggable({
         handle: '.' + CLASSES.TAB_BTN,
         appendTo: stage,
+        accept: '.' + CLASSES.PANE,
         scope: 'droppable',
+        distance: 7,
+        delay: 200,
+        start () {
+          console.log(_this._tabHeaderDroppable.droppable('option'))
+        },
         helper (event) {
-          var originEvent = event.originalEvent
           var tab = _this.tabs.filter(tab => tab.btn[0] === event.target)[0]
           tab._tpl =  _this._cloneTab(tab)
-          _this._tplPaneMap = _this._clonePaneDomMap(tab._tpl)
+          _this._tplPaneMap = _this._clonePaneDomMap()
+          _this._appendTabInPaneDomMap(_this._tplPaneMap, [tab._tpl])
+          _this._tplPaneMap.paneHandle.hide()
           _this._activeTab(tab._tpl)
           currentData = _createPureObject({pane: _this, tab: tab, type: CLASSES.TAB_BTN, wrap: _this._tplPaneMap.pane})
           return _this._tplPaneMap.pane.css({
@@ -217,29 +229,35 @@ var comtab = (function ($, undefined) {
         scroll: false,
         scope: 'droppable',
         start () {
+          console.log(_this)
           currentData = _createPureObject({type: CLASSES.PANE, pane: _this, wrap: _this._pane})
         }
       })
       this._resizable = this._pane.resizable({
-        addClasses: false,
         containment: stage,
+        // ghost: true,
+        // animate: true,
+        autoHide: true,
         handles: 'n, e, s, w, ne, se, sw, nw'
       })
-      this._tabHeaderDroppable = this._tabHeader.droppable({
+      this._tabHeaderDroppable = this._tabHeaderDrop.droppable({
         greedy: true,
-        hoverClass: CLASSES.TAB_HEADER_ACTIVE,
+        addClasses: false,
         tolerance: 'pointer',
         scope: 'droppable',
         over () {
           currentData.wrap.addClass(CLASSES.PANE_DROP_READY)
+          _this._tabHeader.addClass(CLASSES.TAB_HEADER_ACTIVE)
         },
         out () {
           currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
+          _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
         },
         drop () {
           currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
+          _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
           // if drop pane to tab header
-          if (currentData.type === CLASSES.PANE) {
+          if (currentData.type === CLASSES.PANE || currentData.type === TYPES.REMOVE_PANE_FROM_COLUMN) {
             _this._concatPane(currentData.pane)
           }
           // if drop temporary pane to tab header
@@ -256,6 +274,9 @@ var comtab = (function ($, undefined) {
       this._listeners = {
         paneSelect (event) {
           PaneManager.selectPane(_this)
+        },
+        changeTab (event) {
+          console.log('changeTab')
           var target = $(event.target)
           var id = target.data('tab-id')
           if (id) {
@@ -272,70 +293,23 @@ var comtab = (function ($, undefined) {
         }
       }
       this._pane.on('mousedown', this._listeners.paneSelect)
+      this._tabHeader.on('mouseup', this._listeners.changeTab)
     },
     _initAbsorbEvent () {
-      var _this = this
-      var absorbs = [
-        ['top', 'horizontal'],
-        ['left', 'vertical'],
-        ['bottom', 'horizontal'],
-        ['right', 'vertical']
-      ]
-      _this._absorbs = {}
-      absorbs.forEach(function (absorb) {
-        var direction = absorb[0]
-        var lineDirection = absorb[1]
-        _this._absorbs[direction] = $(
-          '<div class="' +
-          CLASSES['ABSORB_' + lineDirection.toUpperCase()] + ' ' +
-          CLASSES.ABSORB + ' ' +
-          CLASSES['ABSORB_' + direction.toUpperCase()] +
-          '"></div>'
-        ).droppable({
-          hoverClass: CLASSES.ABSORB_ACTIVE,
-          tolerance: 'pointer',
-          greedy: true,
-          scope: 'droppable',
-          over () {
-            currentData.wrap.addClass(CLASSES.PANE_DROP_READY)
-          },
-          out () {
-            currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
-          },
-          drop (event, ui) {
-            var type = currentData.type
-
-            currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
-  
-            if (type === CLASSES.PANE) {
-              combinePane(currentData.pane, _this, direction)
-            } else if (type === CLASSES.TAB_BTN) {
-              _commonTabBtnDrop()
-              setTimeout(function () {
-                var pane = Pane.createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
-                  .setSize(currentData.pane._pane.outerWidth(), currentData.pane._pane.outerHeight())
-                  .setPosition(ui.offset)
-                combinePane(pane, _this, direction)
-                // fix:bug tab-id will be losed, because of the helper will be removed by draggable
-                currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
-                currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
-              })
-            }
-          }
-        })
-        _this._pane.append(_this._absorbs[direction])
-      })
+      _commonInitAbsorbEvent.call(this, this, this._pane)
     },
-    _clonePaneDomMap (tab) {
-      var paneDomMap = this._createPaneDomMap()
-  
-      this._appendTab.call({
-        _pane: paneDomMap.pane,
-        _paneHandle: paneDomMap.paneHandle,
-        _tabHeader: paneDomMap.tabHeader
-      }, tab)
-  
-      return paneDomMap
+    _clonePaneDomMap () {
+      return this._createPaneDomMap()
+    },
+    _appendTabInPaneDomMap (paneDomMap, tabs) {
+      var appendTab = this._appendTab
+      tabs.forEach(function (tab) {
+        appendTab.call({
+          _pane: paneDomMap.pane,
+          _paneHandle: paneDomMap.paneHandle,
+          _tabHeader: paneDomMap.tabHeader
+        }, tab)
+      })
     },
     _cloneTab (tab) {
       return createTab(tab.btn.clone(), tab.content.clone(), tab._options)
@@ -359,14 +333,16 @@ var comtab = (function ($, undefined) {
     _createPaneDomMap () {
       var pane = $('<div class="' + CLASSES.PANE + '"></div>')
       var paneHandle = $('<div class="' + CLASSES.PANE_HANDLE + '"></div>')
-      var tabHeader = $('<div class="' + CLASSES.TAB_HEADER +'"></div>')
+      var tabHeader = $('<div class="' + CLASSES.TAB_HEADER + '"></div>')
+      var tabHeaderDrop = $('<div class="' + CLASSES.TAB_HEADER_DROP + '"></div>')
       
-      pane.append(paneHandle).append(tabHeader)
+      pane.append(paneHandle).append(tabHeader.append(tabHeaderDrop))
   
       return _createPureObject({
         pane: pane,
         paneHandle: paneHandle,
-        tabHeader: tabHeader
+        tabHeader: tabHeader,
+        tabHeaderDrop: tabHeaderDrop
       })
     }
   }
@@ -451,19 +427,12 @@ var comtab = (function ($, undefined) {
       var firstPane = this._panes[0]
 
       // calculate position and size
-      var position = firstPane._pane.position()
-      var width = firstPane._pane.outerWidth()
-      var height = firstPane._pane.outerHeight()
+      this._initPosition = firstPane._pane.position()
+
+      this._restrictPane(firstPane)
 
       // add pane to wrap
-      var wrap = this._wrap = $('<div class="' + CLASSES.PANE_GROUP_COLUMN + '"></div>')
-      wrap.append(firstPane._pane)
-      wrap.css({
-        width: width,
-        height: height,
-        left: position.left,
-        top: position.top
-      })
+      this._wrap = $('<div class="' + CLASSES.PANE_GROUP_COLUMN + '"></div>').append(firstPane._pane)
 
       this._initEvent()
       this._inited = true
@@ -479,71 +448,118 @@ var comtab = (function ($, undefined) {
       if (index < 0) return
 
       if (direction === 'top') {
+        pane._pane.insertBeforeJQ(this._panes[index]._pane)
         this._panes.splice(index, 0, pane)
       } else if (direction === 'bottom') {
+        pane._pane.insertAfterJQ(this._panes[index]._pane)
         this._panes.splice(index + 1, 0, pane)
       }
-      console.log(pane.tabs)
 
-      this._wrap.append(pane._pane)
+      this._restrictPane(pane)
+      // this._wrap.append(pane._pane)
       this.refresh()
     },
     refresh () {
-      var maxWidth = 0
-      var wholeHeight = 0
-      var handleHeight = this._panes[0]._paneHandle.outerHeight()
       this._panes.forEach(function (pane, i) {
-        var width = pane._pane.outerWidth()
-        var height = pane._pane.outerHeight()
-
         if (i > 0) {
           if (!pane._paneHandle.data('display')) {
-            pane._paneHandle.data('display', 'none').css('display', 'none')
-            height = height - handleHeight
+            pane._paneHandle.data('display', 'none').hide()
           }
           pane._absorbs['top'].droppable('disable')
         } else {
-          pane._paneHandle.css('display', 'block')
+          pane._paneHandle.show()
           pane._absorbs['top'].droppable('enable')
         }
 
         pane._draggable.draggable('disable').resizable('disable')
-
-        pane._pane.css({
-          left: 0,
-          top: wholeHeight,
-          height: height
-        })
-        wholeHeight += height
-        if (maxWidth < width) {
-          maxWidth = width
-        }
-      })
-      this._panes.forEach(function (pane) {
-        pane._pane.css({
-          width: maxWidth
-        })
-      })
-      this._wrap.css({
-        height: wholeHeight
       })
     },
-    mount (group) {
-      group._wrap.append(this._wrap)
+    mount (group, append) {
+      if (append) {
+        group._wrap.append(this._wrap)
+      }
+      
       this.refresh()
+      delete this._initPosition
+      this._group = group
       this._mounted = true
     },
     _initEvent () {
       var _this = this
       this._draggable = this._wrap.draggable({
         handle: '.' + CLASSES.TAB_HEADER,
+        cancel: '.' + CLASSES.TAB_BTN,
+        distance: 10,
+        delay: 200,
+        scope: 'droppable',
+        appendTo: stage,
         helper (event) {
-          var pane = _this._panes.filter(function (pane) {
-            return pane._tabHeader[0] === event.target
+          var index
+          var pane = _this._panes.filter(function (pane, i) {
+            var isTrue = pane._tabHeader[0] === event.target
+            if (isTrue) {
+              index = i
+            }
+            return isTrue
           })[0]
-          return pane._pane
+
+          // set position
+          _this._draggable.draggable('option', 'cursorAt', {left: event.offsetX, top: event.offsetY})
+
+          var clonePane = pane._pane.clone()
+          clonePane.find('.' + CLASSES.PANE_HANDLE).hide()
+          clonePane.css({
+            'z-index': PaneManager.topZIndex + 1,
+            position: 'absolute'
+          })
+
+          currentData = _createPureObject({
+            type: TYPES.REMOVE_PANE_FROM_COLUMN,
+            column: _this,
+            pane: pane,
+            wrap: clonePane
+          })
+          
+          return clonePane
+        },
+        start () {
+          _this._draggable.draggable('option', 'cursorAt', false)
         }
       })
+    },
+    _restrictPane (pane) {
+      PaneManager.removePane(pane.id)
+      pane._pane.off('mousedown', pane._listeners.paneSelect)
+      ;['left', 'right'].forEach(function (direction) {
+        pane._absorbs[direction].droppable('disable')
+      })
+      pane._pane.css({
+        position: 'relative',
+        top: '',
+        left: ''
+      })
+    },
+    freePane (pane) {
+      var index = this._panes.indexOf(pane)
+      this._panes.splice(index, 1)
+
+      if (index > 0) {
+        pane._paneHandle.show()
+      }
+      
+      this.rebuildPaneFn(pane)
+      this._group.onColumnRemovePane(pane)
+      delete pane._column
+      delete pane._group
+      pane._pane.css('position', 'absolute')
+    },
+    rebuildPaneFn (pane) {
+      pane.id = PaneManager.addPane(pane)
+      pane._pane.on('mousedown', pane._listeners.paneSelect)
+      ;['left', 'right'].forEach(function (direction) {
+        pane._absorbs[direction].droppable('enable')
+      })
+      pane._draggable.draggable('enable').resizable('enable')
     }
   }
 
@@ -555,6 +571,7 @@ var comtab = (function ($, undefined) {
     init () {
       this._wrap = $('<div class="' + CLASSES.PANE_GROUP + '"></div>')
       this._inited = true
+      this.id = PaneManager.addPane(this)
       return this
     },
     addColumn (column, host, direction) {
@@ -565,39 +582,49 @@ var comtab = (function ($, undefined) {
       var index = this._columns.indexOf(host)
 
       if (direction === 'left') {
+        column._wrap.insertBefore(host._wrap)
         this._columns.splice(index, 0, column)
         this.onChangeLeftPosition(column)
       } else if (direction === 'right') {
+        column._wrap.insertAfter(host._wrap)
         this._columns.splice(index + 1, 0, column)
       }
-
+      column._group = this
       column.mount(this)
-      this.refreshColumnsPosition()
     },
     onChangeLeftPosition (column) {
-      var width = column._wrap.outerWidth()
+      var width = column._wrap.innerWidth()
       var wrapPosition = this._wrap.position()
       this._wrap.css({
         left: wrapPosition.left - width
       })
     },
-    refreshColumnsPosition () {
-      var wholeWidth = 0
-      this._columns.forEach(function (column) {
-        column._wrap.css({
-          left: wholeWidth,
-          top: 0
-        })
-        wholeWidth = column._wrap.outerWidth() + wholeWidth
-      })
-    },
-    initColumnsPosition () {
-      var groupPosition = this._wrap.position()
-      this._columns.forEach(function (column) {
-        var position = column._wrap.position()
-        column._wrap.css({
-          left: position.left - groupPosition.left,
-          top: position.top - groupPosition.top
+    refreshColumnsEvent () {
+      this._columns.forEach(function (column, i) {
+        var exclude = ['top', 'bottom']
+        if (column._absorbs) {
+          if (i === 0) {
+            if (!column._absorbs['left']) {
+              exclude.push('right')
+              _commonInitAbsorbEvent.call(column, column._panes[0], column._wrap, exclude)
+            }
+          } else {
+            if (column._absorbs['left']) {
+              column._absorbs['left'].droppable('destroy')
+              delete column._absorbs['left']
+            }
+          }
+        } else {
+          if (i !== 0) {
+            exclude.push('left')
+          }
+          _commonInitAbsorbEvent.call(column, column._panes[0], column._wrap, exclude)
+        }
+        column._wrap.resizable({
+          handles: 's',
+          resize (event, ui) {
+            console.log(ui)
+          }
         })
       })
     },
@@ -609,22 +636,81 @@ var comtab = (function ($, undefined) {
           currentData = _createPureObject({type: CLASSES.PANE_GROUP, wrap: _this._wrap, group: _this})
         }
       })
+      this._listeners = {
+        paneSelect () {
+          PaneManager.selectPane(_this)
+        }
+      }
+      this._wrap.on('mousedown', this._listeners.paneSelect)
     },
     mount () {
       // must mount before column
       stage.append(this._wrap)
-      this._columns[0].mount(this)
+
+      var position = this._columns[0]._initPosition
+      this._columns[0].mount(this, true)
       this.initEvent()
 
       // set position
-      var position = this._columns[0]._wrap.position()
-      this._wrap.css({
-        left: position.left,
-        top: position.top 
-      })
-      this.initColumnsPosition()
+      this._wrap.css(position)
+      this.refreshColumnsEvent()
 
       this._mounted = true
+    },
+    refreshZIndexCSS () {
+      this._wrap.css('z-index', this.zIndex)
+    },
+    removeColumn (column) {
+      debugger
+      this._columns.splice(this._columns.indexOf(column),1)
+      if (this._columns.length > 1) {
+        this.refreshColumnsPosition()
+      } else {
+        if (this._columns[0]._panes.length > 1) {
+          this.refreshColumnsPosition()
+        } else {
+          this._columns[0]._panes[0].mount()
+          this._columns[0]._wrap.remove()
+        }
+      }
+    },
+    onColumnRemovePane (pane) {
+      var column = pane._column
+      var index = this._columns.indexOf(column)
+      var _this = this
+
+      if (column._panes.length < 1) {
+        setTimeout(function () {
+          column._wrap.remove()
+        })
+        this._columns.splice(index, 1)
+      }
+
+      if (this._columns.length < 2) {
+        if (this._columns[0]._panes.length < 2) {
+          var lastColumn = this._columns.pop()
+          var existedPane = lastColumn._panes.pop()
+          lastColumn.rebuildPaneFn(existedPane)
+
+          // adjust position
+          var lastColumnPosition = lastColumn._wrap.position()
+          var groupPosition = _this._wrap.position()
+          existedPane.setPosition({
+            left: groupPosition.left + lastColumnPosition.left,
+            top: groupPosition.top + lastColumnPosition.top
+          }).mount()
+
+          setTimeout(function () {
+            PaneManager.removePane(_this.id)
+            _this._wrap.remove()
+          })
+          delete existedPane._column
+          delete existedPane._group
+        }
+      }
+
+      column._panes.length && column.refresh()
+      // this._columns.length && this.refreshColumnsPosition()
     }
   }
 
@@ -699,6 +785,7 @@ var comtab = (function ($, undefined) {
     })
     CLASSES.PANE_DROP_READY = paneDropReady
     CLASSES.PANE_GROUP_COLUMN = paneGroupColumn
+    CLASSES.TAB_HEADER_DROP = tabHeader + '_droppable'
 
     return CLASSES
   }
@@ -814,13 +901,82 @@ var comtab = (function ($, undefined) {
     }
   }
 
+  function _commonInitAbsorbEvent (host, wrap, exclude) {
+    var _this = this
+    var absorbs = [
+      ['top', 'horizontal'],
+      ['left', 'vertical'],
+      ['bottom', 'horizontal'],
+      ['right', 'vertical']
+    ]
+    _this._absorbs = {}
+    absorbs.forEach(function (absorb) {
+      var direction = absorb[0]
+
+      if (exclude && exclude.indexOf(direction) >= 0) return
+
+      var lineDirection = absorb[1]
+      _this._absorbs[direction] = $(
+        '<div class="' +
+        CLASSES['ABSORB_' + lineDirection.toUpperCase()] + ' ' +
+        CLASSES.ABSORB + ' ' +
+        CLASSES['ABSORB_' + direction.toUpperCase()] +
+        '"></div>'
+      ).droppable({
+        hoverClass: CLASSES.ABSORB_ACTIVE,
+        tolerance: 'pointer',
+        greedy: true,
+        scope: 'droppable',
+        over () {
+          currentData.wrap.addClass(CLASSES.PANE_DROP_READY)
+        },
+        out () {
+          currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
+        },
+        drop (event, ui) {
+          var type = currentData.type
+
+          currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
+
+          if (type === CLASSES.PANE) {
+            combinePane(currentData.pane, host, direction)
+          } else if (type === CLASSES.TAB_BTN) {
+            _commonTabBtnDrop()
+            setTimeout(function () {
+              var pane = Pane.createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
+                // .setSize(currentData.pane._pane.width(), currentData.pane._pane.height())
+                .setPosition(ui.offset)
+              combinePane(pane, host, direction)
+              // fix:bug tab-id will be losed, because of the helper will be removed by draggable
+              currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
+              currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
+            })
+          }
+        }
+      })
+      wrap.append(_this._absorbs[direction])
+    })
+  }
+
+  $.fn.extend({
+    insertBeforeJQ: function (ref) {
+      ref.parent()[0].insertBefore(this[0], ref[0])
+      return this
+    },
+    insertAfterJQ: function (ref) {
+      ref.parent()[0].insertBefore(this[0], ref.next()[0])
+      return this
+    }
+  })
+
   return {
     createPane,
     createTab,
     setStageBySelector,
     Pane,
     parseJSON,
-    toJSON
+    toJSON,
+    PaneManager
   }
 
 })(window.$ || window.jQurey)
