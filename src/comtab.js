@@ -434,6 +434,7 @@ var comtab = (function ($, undefined) {
 
       // calculate position and size
       this._initPosition = firstPane._pane.position()
+      this._width = firstPane._pane.width()
 
       this._restrictPane(firstPane)
 
@@ -542,7 +543,8 @@ var comtab = (function ($, undefined) {
       pane._pane.css({
         position: 'relative',
         top: '',
-        left: ''
+        left: '',
+        width: this._width
       })
     },
     freePane (pane) {
@@ -861,9 +863,12 @@ var comtab = (function ($, undefined) {
       return id
     },
     removePane (id) {
+      var matchPane = this.paneMap[id]
+      // fix:bug maybe pane was destoryed by group
+      if (!matchPane) return
       // normalize pane layer
       // only keep the max zindex correct, not reset
-      if (this.topZIndex === this.paneMap[id].zIndex) {
+      if (this.topZIndex === matchPane.zIndex) {
         this.topZIndex--
       }
       delete this.paneMap[id]
