@@ -238,7 +238,11 @@ var comtab = (function ($, undefined) {
         // ghost: true,
         // animate: true,
         autoHide: true,
-        handles: 'n, e, s, w, ne, se, sw, nw'
+        handles: 'n, e, s, w, ne, se, sw, nw',
+        minWidth: _this._options.minWidth,
+        minHeight: _this._options.minHeight,
+        maxWidth: _this._options.maxWidth,
+        maxHeight: _this._options.maxHeight
       })
       this._tabHeaderDroppable = this._tabHeaderDrop.droppable({
         greedy: true,
@@ -324,7 +328,9 @@ var comtab = (function ($, undefined) {
       var defaultOptions = _createPureObject({
         autoMount: false,
         minWidth: 100,
-        minHeight: 60,
+        minHeight: 70,
+        maxWidth: 300,
+        maxHeight: 300,
         absorbDistance: 10,
         absorbOrigin: 'center'
       })
@@ -622,8 +628,43 @@ var comtab = (function ($, undefined) {
         }
         column._wrap.resizable({
           handles: 's',
+          start () {
+            column._panes.forEach(function (pane) {
+              pane._originalHeight = pane._pane.height()
+            })
+            column._originalHeight = column._wrap.height()
+            console.log(column._originalHeight)
+          },
           resize (event, ui) {
-            console.log(ui)
+            var surplus = source = ui.size.height - ui.originalSize.height
+            var isPlus = surplus > 0
+            surplus = Math.abs(surplus)
+            if (isPlus) {
+              column._panes.forEach(function (pane) {
+                if (surplus <= 0) return
+                var curHeight = pane._originalHeight
+                var rest = pane._options.maxHeight - curHeight
+                if (rest > 0) {
+                  var assigned = surplus >= rest ? rest : surplus
+                  surplus = surplus - assigned
+                  pane.setSize(undefined, curHeight + assigned)
+                }
+              })
+            } else {
+              column._panes.reverse().forEach(function (pane) {
+                if (surplus <= 0) return
+                var curHeight = pane._originalHeight
+                var rest =  curHeight - pane._options.minHeight
+                if (rest > 0) {
+                  var assigned = surplus >= rest ? rest : surplus
+                  surplus = surplus - assigned
+                  pane.setSize(undefined, curHeight - assigned)
+                }
+              })
+            }
+            if (surplus > 0 && surplus !== Math.abs(source)) {
+              column._wrap.css('height', column._originalHeight - isPlus ? surplus : -surplus)
+            }
           }
         })
       })

@@ -20,7 +20,7 @@
 .comtab-pane-group {
   display: table;
   position: absolute;
-  /* box-shadow: 0 0 1px 1px#232323; */
+  box-shadow: 0 0 1px 1px#232323;
   box-sizing: border-box;
 }
 
@@ -50,6 +50,7 @@
 .comtab-tab_header {
   position: relative;
   background-color: #424242;
+  font-size: 12px;
 }
 
 .comtab-tab_header-active {
@@ -75,7 +76,7 @@
 
 .comtab-tab_btn {
   display: inline-block;
-  padding: 4px 6px;
+  padding: 1px 6px;
   color: #f0f0f0;
   background-color: #484848;
 }
