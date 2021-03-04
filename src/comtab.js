@@ -439,7 +439,9 @@ var comtab = (function ($, undefined) {
       this._restrictPane(firstPane)
 
       // add pane to wrap
-      this._wrap = $('<div class="' + CLASSES.PANE_GROUP_COLUMN + '"></div>').append(firstPane._pane)
+      this._wrap = $('<div class="' + CLASSES.PANE_GROUP_COLUMN + '"></div>')
+      this._inner = $('<div>').css('position', 'relative')
+      this._wrap.append(this._inner.append(firstPane._pane))
 
       this._initEvent()
       this._inited = true
@@ -597,6 +599,7 @@ var comtab = (function ($, undefined) {
         column._wrap.insertAfter(host._wrap)
         this._columns.splice(index + 1, 0, column)
       }
+      this.refreshColumnsEvent()
       column._group = this
       column.mount(this)
     },
@@ -614,7 +617,7 @@ var comtab = (function ($, undefined) {
           if (i === 0) {
             if (!column._absorbs['left']) {
               exclude.push('right')
-              _commonInitAbsorbEvent.call(column, column._panes[0], column._wrap, exclude)
+              _commonInitAbsorbEvent.call(column, column._panes[0], column._wrap, exclude)             
             }
           } else {
             if (column._absorbs['left']) {
@@ -628,47 +631,47 @@ var comtab = (function ($, undefined) {
           }
           _commonInitAbsorbEvent.call(column, column._panes[0], column._wrap, exclude)
         }
-        column._wrap.resizable({
-          handles: 's',
-          start () {
-            column._panes.forEach(function (pane) {
-              pane._originalHeight = pane._pane.height()
-            })
-            column._originalHeight = column._wrap.height()
-            console.log(column._originalHeight)
-          },
-          resize (event, ui) {
-            var surplus = source = ui.size.height - ui.originalSize.height
-            var isPlus = surplus > 0
-            surplus = Math.abs(surplus)
-            if (isPlus) {
+        if (!column._resizable) {
+          column._resizable = column._inner.resizable({
+            handles: 'e, s, se',
+            start () {
               column._panes.forEach(function (pane) {
-                if (surplus <= 0) return
-                var curHeight = pane._originalHeight
-                var rest = pane._options.maxHeight - curHeight
-                if (rest > 0) {
-                  var assigned = surplus >= rest ? rest : surplus
-                  surplus = surplus - assigned
-                  pane.setSize(undefined, curHeight + assigned)
-                }
+                pane._originalHeight = pane._pane.height()
               })
-            } else {
-              column._panes.reverse().forEach(function (pane) {
-                if (surplus <= 0) return
-                var curHeight = pane._originalHeight
-                var rest =  curHeight - pane._options.minHeight
-                if (rest > 0) {
-                  var assigned = surplus >= rest ? rest : surplus
-                  surplus = surplus - assigned
-                  pane.setSize(undefined, curHeight - assigned)
-                }
-              })
+            },
+            resize (event, ui) {
+              var surplus = ui.size.height - ui.originalSize.height
+              var isPlus = surplus > 0
+              var source = surplus = Math.abs(surplus)
+              if (isPlus) {
+                column._panes.forEach(function (pane) {
+                  if (surplus <= 0) return
+                  var curHeight = pane._originalHeight
+                  var rest = pane._options.maxHeight - curHeight
+                  if (rest > 0) {
+                    var assigned = surplus >= rest ? rest : surplus
+                    surplus = surplus - assigned
+                    pane.setSize(undefined, curHeight + assigned)
+                  }
+                })
+              } else {
+                column._panes.reverse().forEach(function (pane) {
+                  if (surplus <= 0) return
+                  var curHeight = pane._originalHeight
+                  var rest =  curHeight - pane._options.minHeight
+                  if (rest > 0) {
+                    var assigned = surplus >= rest ? rest : surplus
+                    surplus = surplus - assigned
+                    pane.setSize(undefined, curHeight - assigned)
+                  }
+                })
+              }
+              column._inner.css('height', '')
             }
-            if (surplus > 0 && surplus !== Math.abs(source)) {
-              column._wrap.css('height', column._originalHeight - isPlus ? surplus : -surplus)
-            }
-          }
-        })
+          })
+        }
+        
+        column._resizable.resizable('option', 'handles', i === 0 ? 'w, e, s, sw, se' : 'e, s, sw, se')
       })
     },
     initEvent () {
