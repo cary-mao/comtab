@@ -261,7 +261,7 @@ var comtab = (function ($, undefined) {
           currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
           _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
           // if drop pane to tab header
-          if (currentData.type === CLASSES.PANE || currentData.type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+          if (currentData.type === CLASSES.PANE) {
             _this._concatPane(currentData.pane)
           }
           // if drop temporary pane to tab header
@@ -271,6 +271,9 @@ var comtab = (function ($, undefined) {
               _this._concatPane(pane)
               _commonTabBtnDrop()
             }
+          } else if (currentData.type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+            currentData.column.freePane(currentData.pane)
+            _this._concatPane(currentData.pane)
           }
         }
       })
@@ -1000,6 +1003,9 @@ var comtab = (function ($, undefined) {
               currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
               currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
             })
+          } else if (type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+            currentData.column.freePane(currentData.pane)
+            combinePane(currentData.pane, host, direction)
           }
         }
       })
