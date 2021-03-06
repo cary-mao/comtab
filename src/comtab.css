@@ -4,14 +4,14 @@
 }
 
 .comtab-pane {
-  min-width: 200px;
   width: 200px;
   position: absolute;
   left: 0;
   top: 0;
   /* background-color: #484848; */
   background-color: #535353;
-  border: 1px solid #383838;
+  border-color: #383838;
+  border-style: solid;
   box-shadow: 0 0 1px 1px#232323;
   cursor: default;
   box-sizing: border-box;

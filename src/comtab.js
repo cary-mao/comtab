@@ -158,6 +158,8 @@ var comtab = (function ($, undefined) {
         this._activeTab(activedTab = this.tabs[0])
       }
   
+      this._pane.css('border-width', this._options.borderWidth)
+
       this._initPaneEvent()
       this._strictEventIfSingleTab()
       this._initRestrictSize()
@@ -261,7 +263,7 @@ var comtab = (function ($, undefined) {
           currentData.wrap.removeClass(CLASSES.PANE_DROP_READY)
           _this._tabHeader.removeClass(CLASSES.TAB_HEADER_ACTIVE)
           // if drop pane to tab header
-          if (currentData.type === CLASSES.PANE || currentData.type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+          if (currentData.type === CLASSES.PANE) {
             _this._concatPane(currentData.pane)
           }
           // if drop temporary pane to tab header
@@ -271,6 +273,9 @@ var comtab = (function ($, undefined) {
               _this._concatPane(pane)
               _commonTabBtnDrop()
             }
+          } else if (currentData.type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+            currentData.column.freePane(currentData.pane)
+            _this._concatPane(currentData.pane)
           }
         }
       })
@@ -327,12 +332,13 @@ var comtab = (function ($, undefined) {
       this._options = options
       var defaultOptions = _createPureObject({
         autoMount: false,
-        minWidth: 100,
+        minWidth: 200,
         minHeight: 70,
         maxWidth: 300,
         maxHeight: 300,
         absorbDistance: 10,
-        absorbOrigin: 'center'
+        absorbOrigin: 'center',
+        borderWidth: '1px'
       })
       this._options = Object.assign(defaultOptions, options)
     },
@@ -435,6 +441,7 @@ var comtab = (function ($, undefined) {
       // calculate position and size
       this._initPosition = firstPane._pane.position()
       this._width = firstPane._pane.width()
+      this._minWidth = firstPane._options.minWidth
 
       this._restrictPane(firstPane)
 
@@ -611,6 +618,7 @@ var comtab = (function ($, undefined) {
       })
     },
     refreshColumnsEvent () {
+      var _this = this
       this._columns.forEach(function (column, i) {
         var exclude = ['top', 'bottom']
         if (column._absorbs) {
@@ -634,15 +642,29 @@ var comtab = (function ($, undefined) {
         if (!column._resizable) {
           column._resizable = column._inner.resizable({
             handles: 'e, s, se',
+            minWidth: column._minWidth,
             start () {
               column._panes.forEach(function (pane) {
                 pane._originalHeight = pane._pane.height()
               })
+              _this._originalPosition = _this._wrap.position()
             },
             resize (event, ui) {
-              var surplus = ui.size.height - ui.originalSize.height
+              var surplus = ui.size.width - ui.originalSize.width
+              if (surplus !== 0) {
+                column._panes.forEach(function (pane) {
+                  pane.setSize(ui.size.width)
+                })
+                column._width = ui.size.width
+                var positionMinus = ui.position.left - ui.originalPosition.left
+                if (positionMinus < 0 && i === 0) {
+                  var originPosition = column._group._originalPosition
+                  column._group._wrap.css({left: originPosition.left - surplus})
+                  column._inner.css('left', '0')
+                }
+              }
+              surplus = ui.size.height - ui.originalSize.height
               var isPlus = surplus > 0
-              var source = surplus = Math.abs(surplus)
               if (isPlus) {
                 column._panes.forEach(function (pane) {
                   if (surplus <= 0) return
@@ -993,13 +1015,16 @@ var comtab = (function ($, undefined) {
             _commonTabBtnDrop()
             setTimeout(function () {
               var pane = Pane.createPaneByDomMap(currentData.pane._tplPaneMap, [currentData.tab._tpl])
-                // .setSize(currentData.pane._pane.width(), currentData.pane._pane.height())
+                .setSize(currentData.pane._pane.width(), currentData.pane._pane.height())
                 .setPosition(ui.offset)
               combinePane(pane, host, direction)
               // fix:bug tab-id will be losed, because of the helper will be removed by draggable
               currentData.tab._tpl.btn.data('tab-id', currentData.tab._tpl.id)
               currentData.tab._tpl.content.data('tab-id', currentData.tab._tpl.id)
             })
+          } else if (type === TYPES.REMOVE_PANE_FROM_COLUMN) {
+            currentData.column.freePane(currentData.pane)
+            combinePane(currentData.pane, host, direction)
           }
         }
       })
