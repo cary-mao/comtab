@@ -2,31 +2,44 @@
   "name": "comtab",
   "version": "1.0.0",
   "description": "",
-  "main": "npx comtab.js",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/comtab.umd.js",
+  "module": "./dist/comtab.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/comtab.es.js",
+      "require": "./dist/comtab.umd.js"
+    }
+  },
   "scripts": {
-    "start": "npm run dev:server",
-    "dev:server": "npx live-server --entry-file=src/comtab.html --browser=CHROME --watch=src --open=src",
-    "build": "npx npm-run-all build:*",
-    "build:js": "npx uglifyjs src/comtab.js -cmo dist/comtab.min.js --source-map \"filename='dist/comtab.min.js.map'\"",
-    "build:css": "npx csso src/comtab.css -o dist/comtab.min.css -s dist/comtab.min.css.map",
-    "gzip": "npx npm-run-all gzip:*",
-    "gzip:js": "npx gzip dist/comtab.min.js",
-    "gzip:css": "npx gzip dist/comtab.min.css"
+    "dev": "vite serve",
+    "build": "vite build",
+    "serve": "vite build && vite preview"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/jquery": "^3.5.5",
+    "@types/jqueryui": "^1.12.15",
+    "@types/lodash": "^4.14.168",
+    "autoprefixer": "^10.2.5",
     "csso-cli": "^3.0.0",
     "cz-conventional-changelog": "^3.3.0",
     "gzip-cli": "^1.2.0",
-    "live-server": "^1.2.1",
     "npm-run-all": "^4.1.5",
-    "uglify-js": "^3.12.7"
+    "stylus": "^0.54.8",
+    "uglify-js": "^3.12.7",
+    "vite": "^2.2.4"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "lodash": "^4.17.21"
   }
 }
