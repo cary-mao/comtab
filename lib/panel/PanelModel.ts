@@ -27,6 +27,10 @@ export interface PanelOptions {
 }
 
 export default class PanelModel extends Model {
+  setZIndex(zIndex: number) {
+    this._state.zIndex = zIndex;
+    this.notify(new ModelEvent(false), 'setZIndex', zIndex);
+  }
   private _state: PanelState = {
     id: genId('panel'),
     position: {left: 0, top: 0},
@@ -50,7 +54,7 @@ export default class PanelModel extends Model {
 
   activate () {
     this._state.actived = true;
-    this.notify(new ModelEvent(), 'activatePanel');
+    this.notify(new ModelEvent(), 'activatePanel', this.host);
   }
 
   deactivate () {

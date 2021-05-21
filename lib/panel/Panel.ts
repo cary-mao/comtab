@@ -18,6 +18,17 @@ export default class Panel {
     this._init();
   }
 
+  /**
+   * carefully: the result of this method should be read-only.
+   */
+  get state () {
+    return this._model.getState();
+  }
+
+  setZIndex (zIndex: number) {
+    this._model.setZIndex(zIndex);
+  }
+
   setPosition (position?: Position) {
     this._model.setPosition(position)
   }

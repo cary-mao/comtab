@@ -17,9 +17,7 @@ export default class PanelController extends Controller {
   }
 
   dispatchModel(event: ModelEvent, type: string, payload) {
-    // console.log(event, type, args)
-    // console.log(arguments)
-    // console.log(type)
+    // activatePanel is executed by stage
     if (type === 'activateTab') {
       const targetModel = payload.targetModel;
       this._model.getState().tabs.forEach(t => {
@@ -40,8 +38,11 @@ export default class PanelController extends Controller {
       tab._view.remove();
     } else if (type === 'setPanelPosition') {
       this._view.setPosition(payload);
+      event.stopPropagation();
     } else if (type === 'toggleTabSplitEvent') {
       this._view.setTabSplitEvent(payload);
+    } else if (type === 'setZIndex') {
+      this._view.setZIndex(payload);
     }
   }
   dispatchView(event: ViewEvent, ...args: any[]) {

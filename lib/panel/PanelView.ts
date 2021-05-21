@@ -6,6 +6,9 @@ import PanelModel, { Position } from "./PanelModel";
 import Panel from "./Panel";
 
 export default class PanelView extends View {
+  setZIndex(zIndex: number) {
+    this._$wrapper.css('z-index', zIndex);
+  }
   private _$wrapper: JQuery;
   private _$panelHandle: JQuery;
   private _$header: JQuery;
@@ -54,6 +57,9 @@ export default class PanelView extends View {
   }
 
   bindEvents () {
+    this._$wrapper.on('mousedown', () => {
+      this._model.activate();
+    });
     this._$wrapper.draggable({
       handle: '.' + CLASSES.PANE_HANDLE
     });
