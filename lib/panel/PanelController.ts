@@ -40,7 +40,7 @@ export default class PanelController extends Controller {
       tab._view.remove();
 
       if (tab._model.getState().actived) {
-        this._model.getState().tabs[0]._model.activate(new ModelEvent(false));
+        this._model.getState().tabs[0]._model.activate();
       }
 
       event.stopPropagation();

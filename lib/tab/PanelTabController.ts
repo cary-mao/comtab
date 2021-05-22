@@ -28,7 +28,6 @@ export default class PanelTabController extends Controller {
     }
     // activateTab is executed by panel when it existed.
     if (type === 'activateTab' && !this._parent) {
-      console.log(ShareData.value.task)
       this._view.activate();
       return;
     }
