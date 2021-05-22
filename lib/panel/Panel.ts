@@ -38,19 +38,7 @@ export default class Panel {
     this._view.create();
     state.tabs.forEach(t => t._controller.setParent(this._controller));
 
-    this.refreshTabSplitEvent();
-  }
-
-  refreshTabSplitEvent () {
-    const state = this._model.getState();
-    if (state.tabs.length <= 1 && state._tabSplitEnabled) {
-      this._model.toggleTabSplitEvent(false);
-      return;
-    }
-    if (state.tabs.length > 1 && !state._tabSplitEnabled) {
-      this._model.toggleTabSplitEvent(true);
-      return;
-    }
+    this._view.refreshTabSplitEvent();
   }
 
   deleteTab (tab: PanelTab) {

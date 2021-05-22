@@ -38,7 +38,7 @@ export function cloneDeep (value) {
 }
 
 export function isDef (value) {
-  return value === void(0);
+  return value !== void(0);
 }
 
 export function substring (string: string, start: number, end: number) {

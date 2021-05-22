@@ -41,7 +41,7 @@ export default class PanelTabModel extends Model {
   activate (event: ModelEvent = new ModelEvent()) {
     if (!this._state.actived) {
       this._state.actived = true;
-      this.notify(event, 'activateTab', {targetModel: this});
+      this.notify(event, 'activateTab', this);
     }
   }
 

@@ -8,6 +8,7 @@ import PanelView from "../panel/PanelView";
 import PanelTab from "./PanelTab";
 import PanelTabModel from "./PanelTabModel";
 import PanelTabView from "./PanelTabView";
+import ShareData from '../share';
 
 export default class PanelTabController extends Controller {
   protected _view!: PanelTabView;
@@ -27,11 +28,13 @@ export default class PanelTabController extends Controller {
     }
     // activateTab is executed by panel when it existed.
     if (type === 'activateTab' && !this._parent) {
+      console.log(ShareData.value.task)
       this._view.activate();
       return;
     }
     if (type === 'toggleTabHandleEvent') {
       this._view.toggleTabHandleEvent(payload);
+      event.stopPropagation();
     }
   }
   dispatchView(event: ViewEvent, ...args: any[]) {

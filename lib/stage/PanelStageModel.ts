@@ -35,6 +35,7 @@ export default class PanelStageModel extends Model {
 
   addPanel (panel: Panel) {
     this._state.panels.push(panel);
+    console.log('addPanel')
     this.notify(new ModelEvent(false), 'addPanel', panel);
   }
 

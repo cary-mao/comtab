@@ -1,5 +1,7 @@
 import comtab from './lib/comtab';
 
+globalThis.logger = comtab.logger;
+
 comtab({
   stage: '#stage',
   panels: [

@@ -1,4 +1,5 @@
 import CLASSES from "../classes";
+import ViewEvent from "../mvc/events/ViewEvent";
 import View from "../mvc/View";
 import Panel from "../panel/Panel";
 import PanelController from "../panel/PanelController";
@@ -21,7 +22,7 @@ export default class PanelStageView extends View {
   }
 
   deletePanel (panel: Panel) {
-
+    panel._view.getElements().wrapper.remove();
   }
 
   bindEvents () {
@@ -29,17 +30,9 @@ export default class PanelStageView extends View {
       drop: (event, ui) => {
         const type = ShareData.value.type;
         if (type === 'tmpPanelFromTabDrag') {
-          // delete origin tab
-          ShareData.value.tab.getParent().deleteTab(ShareData.value.tab);
-          // create new elements of newPanel
-          // setTimeout(() => {
-          ShareData.value.panel._view.create();
-          ShareData.value.panel.setPosition(ui.offset);
-          (ShareData.value.tab._controller.getParent() as PanelController).host.refreshTabSplitEvent();
-          this._model.addPanel(ShareData.value.panel);
-          // })
-          // reset the type
-          ShareData.reset();
+          ShareData.setTask('tmpPanelFromTabDrag');
+          this.notify(new ViewEvent(), 'tmpPanelFromTabDrag', ui);
+          // ShareData.resetTask();
         }
       }
     });

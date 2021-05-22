@@ -30,7 +30,8 @@ export default class PanelTabView extends View {
     this.host = host;
   }
 
-  create (state: PanelTabState) {
+  create (state?: PanelTabState) {
+    state = state || this._model.getState();
     this._$btn = createElementWithClass(CLASSES.TAB_BTN).text(state.btnText);
     this._$content = $(state.content as JQuery.PlainObject).addClass(CLASSES.TAB_CONTENT);
     
@@ -42,10 +43,14 @@ export default class PanelTabView extends View {
   }
 
   bindEvents () {
-    this._$btn.on('click', () => this._model.activate());
+    this._$btn.on('click', () => {
+      ShareData.setTask('activateTab');
+      this._model.activate();
+    });
     this.events.tabSplit = this._$btn.draggable({
       delay: 200,
       helper: () => {
+        ShareData.setTask('tmpPanelFromTabDrag');
         const newPanel = Panel.copyPanelByTabs(this.host);
         ShareData.value.panel = newPanel;
         ShareData.value.tab = this.host;
@@ -57,6 +62,9 @@ export default class PanelTabView extends View {
 
   toggleTabSplitEvent (enable?: boolean) {
     enable = isDef(enable) ? enable : this.events.tabSplit.draggable('option', 'disabled');
+    
+    const t = this.events.tabSplit;
+    // this.events.tabSplit.draggable(enable ? 'enable' : 'disable');
     this.events.tabSplit.draggable(enable ? 'enable' : 'disable');
   }
 

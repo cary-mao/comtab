@@ -18,6 +18,6 @@ export default class DataProxy<T> {
   }
 
   reset () {
-    this._value = this._initValue;
+    this._value = cloneDeep(this._initValue);
   }
 }

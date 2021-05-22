@@ -67,6 +67,11 @@ export default class PanelModel extends Model {
     this.notify(new ModelEvent(), 'deleteTab', {tab});
   }
 
+  addTabs (...tabs: Array<PanelTab>) {
+    this._state.tabs = this._state.tabs.concat(tabs);
+    this.notify(new ModelEvent(false), 'addTabs', tabs);
+  }
+
   toggleTabSplitEvent (enable?: boolean) {
     this._state._tabSplitEnabled = isDef(enable) ? enable : !this._state._tabSplitEnabled;
     this.notify(new ModelEvent(false), 'toggleTabSplitEvent', this._state._tabSplitEnabled);

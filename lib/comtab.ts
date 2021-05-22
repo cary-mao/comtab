@@ -12,12 +12,14 @@
 import Panel from "./panel/Panel";
 import PanelGroup from "./group/PanelGroup";
 import PanelStage from "./stage/PanelStage";
-import {assign, cloneDeep, merge} from './utils';
+import {cloneDeep, merge} from './utils';
 import { PanelOptions } from './panel/PanelModel';
 import { PanelStageOptions } from "./stage/PanelStageModel";
 import { PanelTabOptions } from "./tab/PanelTabModel";
 import PanelTab from "./tab/PanelTab";
 import './styles/comtab.css';
+import Logger from "./mvc/logger";
+import { logger } from "./share";
 
 // @ts-ignore
 interface ComtabPanelOptions extends PanelOptions {
@@ -47,6 +49,10 @@ interface Comtab {
    * @contrustor
    */
   PanelGroup: Function;
+  /**
+   * logger for debugger
+   */
+  logger: Logger;
 }
 
 const comtab: Comtab = function render (stateOptions: ComtabStateOptions) {
@@ -72,6 +78,7 @@ const comtab: Comtab = function render (stateOptions: ComtabStateOptions) {
 comtab.Panel = Panel;
 comtab.PanelStage = PanelStage;
 comtab.PanelGroup = PanelGroup;
+comtab.logger = logger;
 
 export default comtab;
 

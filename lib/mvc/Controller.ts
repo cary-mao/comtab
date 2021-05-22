@@ -3,6 +3,7 @@ import Model from "./Model";
 import View from "./View";
 import ModelEvent from './events/ModelEvent';
 import ViewEvent from "./events/ViewEvent";
+import ShareData, { logger } from "../share";
 
 export default abstract class Controller {
   protected _model!:Model;
@@ -19,6 +20,7 @@ export default abstract class Controller {
    * @param {...any} args
    */
   dispatch (...args) {
+    logger.record(ShareData.value.task, [`${args[1]}(${this.constructor.name}): `, args.slice(2)]);
     const event = args[0] as ModelEvent | ViewEvent;
     const name = event.getTypeName();
     const dispatchTo = this[`dispatch${name}`]

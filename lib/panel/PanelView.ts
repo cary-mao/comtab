@@ -4,8 +4,28 @@ import CLASSES from '../classes';
 import { createElementWithClass } from "../utils";
 import PanelModel, { Position } from "./PanelModel";
 import Panel from "./Panel";
+import ViewEvent from "../mvc/events/ViewEvent";
+import ShareData from '../share';
 
 export default class PanelView extends View {
+  refreshTabSplitEvent () {
+    const state = this._model.getState();
+    if (state.tabs.length <= 1 && state._tabSplitEnabled) {
+      this._model.toggleTabSplitEvent(false);
+      return;
+    }
+    if (state.tabs.length > 1 && !state._tabSplitEnabled) {
+      this._model.toggleTabSplitEvent(true);
+      return;
+    }
+  }
+  addTabs(tabs: Array<PanelTab>) {
+    tabs.forEach(t => {
+      const {btn, content} = t._view.getElements();
+      this._$header.append(btn);
+      this._$wrapper.append(content);
+    });
+  }
   setZIndex(zIndex: number) {
     this._$wrapper.css('z-index', zIndex);
   }
@@ -58,10 +78,28 @@ export default class PanelView extends View {
 
   bindEvents () {
     this._$wrapper.on('mousedown', () => {
+      ShareData.setTask('activatePanel');
       this._model.activate();
+      // ShareData.resetTask();
     });
     this._$wrapper.draggable({
-      handle: '.' + CLASSES.PANE_HANDLE
+      handle: '.' + CLASSES.PANE_HANDLE,
+      start: () => {
+        ShareData.setTask('panelDragStart');
+        this.notify(new ViewEvent(false), 'panelDragStart', this.host);
+        // ShareData.resetTask();
+      }
+    });
+    this._$header.droppable({
+      tolerance: 'pointer',
+      drop: () => {
+        if (ShareData.value.type === 'tmpPanelFromTabDrag') {
+          return;
+        }
+        ShareData.setTask('insertPanelToTabHeader');
+        this.notify(new ViewEvent(), 'insertPanelToTabHeader', this.host);
+        // ShareData.resetTask();
+      }
     });
   }
 
