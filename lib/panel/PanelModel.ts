@@ -4,6 +4,7 @@ import Model from '../mvc/Model';
 import PanelTab from '../tab/PanelTab';
 import { merge, genId, isDef } from '../utils';
 import Panel from './Panel';
+import PanelView from './PanelView';
 
 interface PanelState {
   id: string;
@@ -12,6 +13,8 @@ interface PanelState {
   zIndex: number;
   tabs: Array<PanelTab>;
   _tabSplitEnabled: boolean;
+  width: number;
+  height: number;
 }
 
 export interface Position {
@@ -24,9 +27,15 @@ export interface PanelOptions {
   zIndex?: number;
   actived?: boolean;
   tabs?: Array<PanelTab>;
+  width?: number;
+  height?: number;
 }
 
 export default class PanelModel extends Model {
+  protected _view: PanelView;
+  setSize(size: { width?: number; height?: number; }) {
+    this._view.setSize(size);
+  }
   setZIndex(zIndex: number) {
     this._state.zIndex = zIndex;
     this.notify(new ModelEvent(false), 'setZIndex', zIndex);
@@ -37,7 +46,9 @@ export default class PanelModel extends Model {
     zIndex: 0,
     actived: false,
     tabs: [],
-    _tabSplitEnabled: true
+    _tabSplitEnabled: true,
+    width: 200,
+    height: 200
   };
   host: Panel;
 

@@ -8,6 +8,12 @@ import ViewEvent from "../mvc/events/ViewEvent";
 import ShareData from '../share';
 
 export default class PanelView extends View {
+  setSize(size: {width?: number, height?: number}) {
+    this._$wrapper.css({
+      width: size.width ? size.width + 'px': undefined,
+      height: size.height ? size.height + 'px': undefined
+    });
+  }
   refreshTabSplitEvent () {
     const state = this._model.getState();
     if (state.tabs.length <= 1 && state._tabSplitEnabled) {
@@ -56,7 +62,7 @@ export default class PanelView extends View {
   }
 
   setPosition (position: Position) {
-    this.events.panelDrag = this._$wrapper.css({
+    this._$wrapper.css({
       left: position.left + 'px',
       top: position.top + 'px'
     });
@@ -82,7 +88,7 @@ export default class PanelView extends View {
       this._model.activate();
       // ShareData.resetTask();
     });
-    this._$wrapper.draggable({
+    this.events.panelDrag = this._$wrapper.draggable({
       handle: '.' + CLASSES.PANE_HANDLE,
       start: () => {
         ShareData.setTask('panelDragStart');

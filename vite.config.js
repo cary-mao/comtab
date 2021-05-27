@@ -14,6 +14,11 @@ export default defineConfig({
         },
         rollupOptions: {
             // input: resolve('index.html'),
+            output: {
+                globals: {
+                    lodash: '_'
+                }
+            },
             external: ['jQuery', 'jQuery.ui', 'lodash']
         }
     }

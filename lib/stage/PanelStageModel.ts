@@ -26,7 +26,7 @@ export default class PanelStageModel extends Model {
   constructor (state: PanelStageOptions) {
     super();
     merge(this._state, state);
-    // init components
+    // init components //
   }
 
   getState () {
@@ -35,7 +35,6 @@ export default class PanelStageModel extends Model {
 
   addPanel (panel: Panel) {
     this._state.panels.push(panel);
-    console.log('addPanel')
     this.notify(new ModelEvent(false), 'addPanel', panel);
   }
 

@@ -32,5 +32,9 @@ export default class PanelStage {
       p._controller.setParent(this._controller);
       this.panelLayer.add(p);
     });
+    state.groups.forEach(g => {
+      g._controller.setParent(this._controller);
+      this.panelLayer.add(g);
+    });
   }
 }

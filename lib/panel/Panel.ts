@@ -18,6 +18,10 @@ export default class Panel {
     this._init();
   }
 
+  getPosition () {
+    return this._model.getState().position;
+  }
+
   /**
    * carefully: the result of this method should be read-only.
    */
@@ -36,9 +40,15 @@ export default class Panel {
   private _init () {
     const state = this._model.getState();
     this._view.create();
+    this._view.setPosition(state.position);
+    this._view.setSize({width: state.width, height: state.height});
     state.tabs.forEach(t => t._controller.setParent(this._controller));
 
     this._view.refreshTabSplitEvent();
+  }
+
+  setSize (size: {width?: number, height?: number}) {
+    this._model.setSize(size);
   }
 
   deleteTab (tab: PanelTab) {
@@ -55,5 +65,13 @@ export default class Panel {
     return new Panel({
       tabs: copyTabs
     });
+  }
+
+  get width () {
+    return this._model.getState().width;
+  }
+
+  get height () {
+    return this._model.getState().height;
   }
 }

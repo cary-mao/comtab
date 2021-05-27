@@ -1,8 +1,11 @@
+import PanelGroup from "../group/PanelGroup";
 import Panel from "../panel/Panel";
 import { _createPureObject } from "../utils";
 
+type LayerObject = Panel | PanelGroup;
+
 interface PanelMap {
-  [key: string]: Panel;
+  [key: string]: LayerObject;
 }
 
 export default class PanelLayer {
@@ -10,7 +13,7 @@ export default class PanelLayer {
   private _panelCount = 0;
   private _topZIndex = 0;
 
-  add (panel: Panel) {
+  add (panel: LayerObject) {
     const id = panel.state.id;
     this._panelMap[id] = panel;
     this._topZIndex = this._panelCount++;
@@ -30,7 +33,7 @@ export default class PanelLayer {
     this._panelCount--;
   }
 
-  activate (panel: Panel) {
+  activate (panel: LayerObject) {
     // not the top-level layer
     if (panel.state.zIndex !== this._topZIndex) {
       for (var k in this._panelMap) {
