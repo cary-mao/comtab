@@ -8,6 +8,10 @@ import ViewEvent from "../mvc/events/ViewEvent";
 import ShareData from '../share';
 
 export default class PanelView extends View {
+  setHandleVisble(visible: boolean) {
+    const fn = visible ? 'show' : 'hide';
+    this._$panelHandle[fn]();
+  }
   setClickActivateEvent(enable: boolean = true) {
     const fn = enable ? 'on' : 'off';
     // @ts-ignore

@@ -12,6 +12,7 @@ interface PanelState {
   actived: boolean;
   zIndex: number;
   tabs: Array<PanelTab>;
+  handleVisible: boolean;
   _tabSplitEnabled: boolean;
   _dragEnabled: boolean;
   _clickActivateEnabled: boolean;
@@ -34,6 +35,10 @@ export interface PanelOptions {
 }
 
 export default class PanelModel extends Model {
+  setHandleVisible(visible: boolean) {
+    this._state.handleVisible = visible;
+    this.notify(new ModelEvent(false), 'setHandleVisible', visible);
+  }
   protected _view: PanelView;
   setSize(size: { width?: number; height?: number; }) {
     this._view.setSize(size);
@@ -48,6 +53,7 @@ export default class PanelModel extends Model {
     zIndex: 0,
     actived: false,
     tabs: [],
+    handleVisible: true,
     _tabSplitEnabled: true,
     _dragEnabled: true,
     _clickActivateEnabled: true, 

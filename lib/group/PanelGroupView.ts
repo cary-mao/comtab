@@ -25,16 +25,21 @@ export default class PanelGroupView extends View {
     this.refreshPosition();
     state.matrix.forEach(r => r.forEach(c => this.addPanel(c)));
 
-    this.changePanelsEvents();
+    this.restrictPanels();
     this.bindEvents();
   }
 
-  changePanelsEvents () {
+  restrictPanels () {
     const state = this._model.getState();
-    state.matrix.forEach(r => {
+    state.matrix.forEach((r, ri) => {
       r.forEach(c => {
         c._model.toggleDragEvent(false);
         c._model.toggleClickActivateEnabled(false);
+
+        // hide the handle
+        if (ri !== 0) {
+          c._model.setHandleVisible(false);
+        }
       });
     });
   }

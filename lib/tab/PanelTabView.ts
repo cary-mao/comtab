@@ -52,6 +52,7 @@ export default class PanelTabView extends View {
       helper: () => {
         ShareData.setTask('tmpPanelFromTabDrag');
         const newPanel = Panel.copyPanelByTabs(this.host);
+        newPanel._view.setZIndex(this.host.getPanelLayer().getTopZIndex() + 1);
         ShareData.value.panel = newPanel;
         ShareData.value.tab = this.host;
         ShareData.value.type = 'tmpPanelFromTabDrag';

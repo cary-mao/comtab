@@ -13,6 +13,14 @@ export default class PanelLayer {
   private _panelCount = 0;
   private _topZIndex = 0;
 
+  getCount () {
+    return this._panelCount;
+  }
+
+  getTopZIndex () {
+    return this._topZIndex;
+  }
+
   add (panel: LayerObject) {
     const id = panel.state.id;
     this._panelMap[id] = panel;

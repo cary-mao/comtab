@@ -63,6 +63,8 @@ export default class PanelController extends Controller {
       this._view.addTabs(payload);
       this._model.toggleTabSplitEvent(this._model.getState().tabs.length > 1);
       event.stopPropagation();
+    } else if (type === 'setHandleVisible') {
+      this._view.setHandleVisble(payload);
     }
   }
   dispatchView(event: ViewEvent, type: string, payload) {

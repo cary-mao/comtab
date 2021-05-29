@@ -1,4 +1,6 @@
+import PanelGroupController from "../group/PanelGroupController";
 import PanelController from "../panel/PanelController";
+import PanelStageController from "../stage/PanelStageController";
 import PanelTabController from "./PanelTabController";
 import PanelTabModel, { PanelTabOptions } from "./PanelTabModel";
 import PanelTabView from "./PanelTabView";
@@ -22,6 +24,14 @@ export default class PanelTab {
 
   getParent () {
     return (this._controller.getParent() as PanelController).host;
+  }
+
+  getPanelLayer () {
+    let groupOrStageController = this._controller.getParent().getParent();
+    if (groupOrStageController instanceof PanelGroupController) {
+      groupOrStageController = groupOrStageController.getParent();
+    }
+    return (groupOrStageController as PanelStageController).host.panelLayer;
   }
 
   static copy (tab: PanelTab) {
