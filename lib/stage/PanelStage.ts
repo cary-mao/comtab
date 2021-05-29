@@ -34,6 +34,9 @@ export default class PanelStage {
     });
     state.groups.forEach(g => {
       g._controller.setParent(this._controller);
+      // remove the panel from panelLayer
+      // and add group in panelLayer
+      g.state.matrix.forEach(r => r.forEach(c => this.panelLayer.remove(c)));
       this.panelLayer.add(g);
     });
   }

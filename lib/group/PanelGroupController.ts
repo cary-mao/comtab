@@ -1,6 +1,7 @@
 import Controller from "../mvc/Controller";
 import ModelEvent from "../mvc/events/ModelEvent";
 import ViewEvent from "../mvc/events/ViewEvent";
+import PanelStageController from "../stage/PanelStageController";
 import PanelGroup from "./PanelGroup";
 import PanelGroupModel from "./PanelGroupModel";
 import PanelGroupView from "./PanelGroupView";
@@ -8,6 +9,7 @@ import PanelGroupView from "./PanelGroupView";
 export default class PanelGroupController extends Controller {
   protected _view: PanelGroupView;
   host: PanelGroup;
+  _parent: PanelStageController;
 
   constructor (model: PanelGroupModel, view: PanelGroupView, host: PanelGroup) {
     super(model, view);

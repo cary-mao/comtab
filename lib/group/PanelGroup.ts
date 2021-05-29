@@ -1,3 +1,4 @@
+import PanelStage from "../stage/PanelStage";
 import PanelGroupController from "./PanelGroupController";
 import PanelGroupModel, { PanelGroupOptions } from "./PanelGroupModel";
 import PanelGroupView from "./PanelGroupView";
@@ -18,11 +19,9 @@ export default class PanelGroup {
     const state = this._model.getState();
     this._view.create();
 
-    state.matrix.forEach(r => r.forEach(c => c._controller.setParent(this._controller)));
-  }
-
-  deletePanel () {
-    
+    state.matrix.forEach(r => r.forEach(c => {
+      c._controller.setParent(this._controller);
+    }));
   }
 
   get state () {

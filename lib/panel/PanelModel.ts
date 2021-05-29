@@ -13,6 +13,8 @@ interface PanelState {
   zIndex: number;
   tabs: Array<PanelTab>;
   _tabSplitEnabled: boolean;
+  _dragEnabled: boolean;
+  _clickActivateEnabled: boolean;
   width: number;
   height: number;
 }
@@ -47,6 +49,8 @@ export default class PanelModel extends Model {
     actived: false,
     tabs: [],
     _tabSplitEnabled: true,
+    _dragEnabled: true,
+    _clickActivateEnabled: true, 
     width: 200,
     height: 200
   };
@@ -86,6 +90,16 @@ export default class PanelModel extends Model {
   toggleTabSplitEvent (enable?: boolean) {
     this._state._tabSplitEnabled = isDef(enable) ? enable : !this._state._tabSplitEnabled;
     this.notify(new ModelEvent(false), 'toggleTabSplitEvent', this._state._tabSplitEnabled);
+  }
+
+  toggleDragEvent (enable?: boolean) {
+    this._state._dragEnabled = isDef(enable) ? enable : !this._state._dragEnabled;
+    this.notify(new ModelEvent(false), 'togglePanelDragEvent', this._state._dragEnabled);
+  }
+
+  toggleClickActivateEnabled (enable?: boolean) {
+    this._state._clickActivateEnabled = isDef(enable) ? enable : !this._state._clickActivateEnabled;
+    this.notify(new ModelEvent(false), 'toggleClickActivateEnabled', this._state._clickActivateEnabled);
   }
 
   getState () {

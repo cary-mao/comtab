@@ -20,8 +20,8 @@ export default class PanelLayer {
     panel.setZIndex(this._panelCount-1);
   }
 
-  remove (id: string) {
-    var matchPanel = this._panelMap[id];
+  remove (panel: LayerObject) {
+    var matchPanel = this._panelMap[panel.state.id];
     // fix:bug maybe panel was destoryed by group
     if (!matchPanel) return;
     // normalize panel layer
@@ -29,7 +29,7 @@ export default class PanelLayer {
     if (this._topZIndex === matchPanel.state.zIndex) {
       this._topZIndex--;
     }
-    delete this._panelMap[id];
+    delete this._panelMap[panel.state.id];
     this._panelCount--;
   }
 

@@ -27,6 +27,8 @@ export default class PanelStageController extends Controller {
       this._view.deletePanel(payload);
     } else if (type === 'activatePanel') {
       this.host.panelLayer.activate(payload);
+    } else if (type === 'activateGroup') {
+      this.host.panelLayer.activate(payload);
     }
   }
   

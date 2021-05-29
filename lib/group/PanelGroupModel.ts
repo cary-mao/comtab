@@ -23,6 +23,9 @@ export interface PanelGroupOptions {
 }
 
 export default class PanelGroupModel extends Model {
+  activate() {
+    this.notify(new ModelEvent(), 'activateGroup', this.host);
+  }
   private _state: PanelGroupState = {
     matrix: [],
     position: null,

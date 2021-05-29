@@ -8,6 +8,14 @@ import ViewEvent from "../mvc/events/ViewEvent";
 import ShareData from '../share';
 
 export default class PanelView extends View {
+  setClickActivateEvent(enable: boolean = true) {
+    const fn = enable ? 'on' : 'off';
+    // @ts-ignore
+    this._$wrapper[fn]('mousedown', this.events.clickActivateFn);
+  }
+  setDragEvent(enable: boolean = true) {
+    this.events.panelDrag.draggable(enable ? 'enable' : 'disable');
+  }
   setSize(size: {width?: number, height?: number}) {
     this._$wrapper.css({
       width: size.width ? size.width + 'px': undefined,
@@ -42,6 +50,7 @@ export default class PanelView extends View {
   host: Panel;
   events: {
     panelDrag?: JQuery;
+    clickActivateFn?: JQuery.TypeEventHandler<HTMLElement, undefined, HTMLElement, HTMLElement, "mousedown">;
   } = {};
 
   constructor (host: Panel) {
@@ -83,11 +92,12 @@ export default class PanelView extends View {
   }
 
   bindEvents () {
-    this._$wrapper.on('mousedown', () => {
+    this.events.clickActivateFn = () => {
       ShareData.setTask('activatePanel');
       this._model.activate();
       // ShareData.resetTask();
-    });
+    };
+    this._$wrapper.on('mousedown', this.events.clickActivateFn);
     this.events.panelDrag = this._$wrapper.draggable({
       handle: '.' + CLASSES.PANE_HANDLE,
       start: () => {

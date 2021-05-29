@@ -1,3 +1,4 @@
+import PanelGroupController from "../group/PanelGroupController";
 import Controller from "../mvc/Controller";
 import ModelEvent from "../mvc/events/ModelEvent";
 import ViewEvent from "../mvc/events/ViewEvent";
@@ -11,7 +12,7 @@ import PanelView from "./PanelView";
 export default class PanelController extends Controller {
   protected _model!: PanelModel;
   protected _view!: PanelView;
-  protected _parent!: PanelStageController;
+  protected _parent!: PanelStageController | PanelGroupController;
   host!: Panel;
 
   constructor (model: PanelModel, view: PanelView, host: Panel) {
@@ -49,6 +50,10 @@ export default class PanelController extends Controller {
       event.stopPropagation();
     } else if (type === 'toggleTabSplitEvent') {
       this._view.setTabSplitEvent(payload);
+    } else if (type === 'togglePanelDragEvent') {
+      this._view.setDragEvent(payload);
+    } else if (type === 'toggleClickActivateEnabled') {
+      this._view.setClickActivateEvent(payload);
     } else if (type === 'setZIndex') {
       this._view.setZIndex(payload);
     } else if (type === 'addTabs') {
@@ -66,7 +71,12 @@ export default class PanelController extends Controller {
     } else if (type === 'insertPanelToTabHeader') {
       const draggingPanel = ShareData.value.panel as Panel;
 
-      this._parent.host.deletePanel(draggingPanel);
+      if (this._parent instanceof PanelStageController) {
+        this._parent.host.deletePanel(draggingPanel);
+      } else if (this._parent instanceof PanelGroupController) {
+        this._parent._parent.host.deletePanel(draggingPanel);
+      }
+      
       draggingPanel.state.tabs.forEach(t => {
         t._model.deactivate(new ModelEvent(false));
         t._view.create();

@@ -6,6 +6,7 @@ import PanelView from "../panel/PanelView";
 import { createElementWithClass } from "../utils";
 import PanelGroup from "./PanelGroup";
 import PanelGroupModel from "./PanelGroupModel";
+import ShareData from '../share';
 
 export default class PanelGroupView extends View {
   protected _model: PanelGroupModel;
@@ -23,6 +24,33 @@ export default class PanelGroupView extends View {
     this._$wrapper = createElementWithClass(CLASSES.PANE_GROUP);
     this.refreshPosition();
     state.matrix.forEach(r => r.forEach(c => this.addPanel(c)));
+
+    this.changePanelsEvents();
+    this.bindEvents();
+  }
+
+  changePanelsEvents () {
+    const state = this._model.getState();
+    state.matrix.forEach(r => {
+      r.forEach(c => {
+        c._model.toggleDragEvent(false);
+        c._model.toggleClickActivateEnabled(false);
+      });
+    });
+  }
+
+  bindEvents () {
+    this._$wrapper.on('mousedown', () => {
+      ShareData.setTask('activateGroup');
+      this._model.activate();
+    });
+    this._$wrapper.draggable({
+      handle: '.' + CLASSES.PANE_HANDLE,
+      start () {
+        ShareData.setTask('groupDragging');
+        ShareData.value.type = 'groupDragging';
+      }
+    });
   }
 
   getElements () {
