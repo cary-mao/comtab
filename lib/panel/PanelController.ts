@@ -65,13 +65,28 @@ export default class PanelController extends Controller {
       ShareData.value.panel = payload;
     } else if (type === 'insertPanelToTabHeader') {
       const draggingPanel = ShareData.value.panel as Panel;
+
       this._parent.host.deletePanel(draggingPanel);
       draggingPanel.state.tabs.forEach(t => {
         t._model.deactivate(new ModelEvent(false));
         t._view.create();
       });
-      ShareData.resetWithoutTask();
+      // ShareData.resetWithoutTask();
       Reflect.apply(this._model.addTabs, this._model, draggingPanel.state.tabs);
+      
+      event.stopPropagation();
+    } else if (type === 'insertTmpPanelToTabHeader') {
+      const originPanel = ShareData.value.tab.getParent();
+      originPanel.deleteTab(ShareData.value.tab);
+      ShareData.value.panel._view.create();
+      ShareData.value.panel.setPosition(payload.offset);
+      originPanel._view.refreshTabSplitEvent();
+      ShareData.value.panel.state.tabs.forEach(t => {
+        t._model.deactivate(new ModelEvent(false));
+        t._view.create();
+      });
+      
+      Reflect.apply(this._model.addTabs, this._model, ShareData.value.panel.state.tabs);
       event.stopPropagation();
     }
   }

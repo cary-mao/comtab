@@ -20,23 +20,29 @@ import PanelTab from "./tab/PanelTab";
 import './styles/comtab.css';
 import Logger from "./mvc/logger";
 import { logger } from "./share";
+import { PanelGroupOptions } from "./group/PanelGroupModel";
 
 // @ts-ignore
-interface ComtabPanelOptions extends PanelOptions {
+export interface ComtabPanelOptions extends PanelOptions {
   tabs?: Array<PanelTabOptions>;
+}
+
+// @ts-ignore
+export interface ComtabGroupOptions extends PanelGroupOptions {
+  matrix?: Array<Array<ComtabPanelOptions>>;
 }
 
 export interface ComtabStateOptions {
   stage?: string | HTMLElement;
   panels?: Array<ComtabPanelOptions>;
-  // groups: Array<PanelGroupOptions>;
+  groups?: Array<ComtabGroupOptions>;
 }
 
 interface Comtab {
   /**
    * render by json data
    */
-  (state: ComtabStateOptions): void;
+  (state: ComtabStateOptions): PanelStage;
   /**
    * @contrustor
    */
@@ -55,25 +61,40 @@ interface Comtab {
   logger: Logger;
 }
 
-const comtab: Comtab = function render (stateOptions: ComtabStateOptions) {
+const comtab: Comtab = function render (stateOptions: ComtabStateOptions): PanelStage {
   stateOptions = initialStateOpts(stateOptions);
   const panelStageOptions: PanelStageOptions = { stage: stateOptions.stage };
-  panelStageOptions.panels = stateOptions.panels.map(p => {
-    const r = cloneDeep(p) as PanelOptions;
-    if (p.tabs) {
-      const activedTabs = p.tabs.filter(t => t.actived);
-      if (activedTabs.length) {
-        for (let i = 1, len = activedTabs.length; i < len; i++) {
-          activedTabs[i].actived = false;
-        }
-      }
-      r.tabs = p.tabs.map(t => new PanelTab(t));
-    }
-    return new Panel(r);
-  });
+  panelStageOptions.panels = stateOptions.panels.map(p => decodePanelOptions(p));
+  panelStageOptions.groups = stateOptions.groups.map(g => decodeGroupOptions(g));
   const stage = new PanelStage(panelStageOptions);
   return stage;
 };
+
+function decodeGroupOptions (g: ComtabGroupOptions) {
+  const matrix = g.matrix.map(r => {
+    return r.map(c => decodePanelOptions(c));
+  });
+
+  return new PanelGroup({
+    matrix,
+    position: g.position,
+    autoPos: g.autoPos
+  });
+}
+
+function decodePanelOptions (p: ComtabPanelOptions) {
+  const r = cloneDeep(p) as PanelOptions;
+  if (p.tabs) {
+    const activedTabs = p.tabs.filter(t => t.actived);
+    if (activedTabs.length) {
+      for (let i = 1, len = activedTabs.length; i < len; i++) {
+        activedTabs[i].actived = false;
+      }
+    }
+    r.tabs = p.tabs.map(t => new PanelTab(t));
+  }
+  return new Panel(r);
+}
 
 comtab.Panel = Panel;
 comtab.PanelStage = PanelStage;

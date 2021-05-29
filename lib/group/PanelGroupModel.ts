@@ -18,8 +18,6 @@ interface PanelGroupState {
 
 export interface PanelGroupOptions {
   matrix?: GroupMatrix;
-  origin?: Panel;
-  originIdx?: [number, number];
   position?: Position;
   autoPos?: boolean;
 }

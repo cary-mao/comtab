@@ -3,7 +3,7 @@ import Logger from './mvc/logger';
 import Panel from './panel/Panel';
 import PanelTab from './tab/PanelTab';
 
-type ACCEPT_TYPES = 'insertPanelToTabHeader';
+type ACCEPT_TYPES = 'insertPanelToTabHeader' | 'panelDragging' | 'tmpPanelFromTabDrop';
 
 type SharedDataType = 'init' | 'tmpPanelFromTabDrag' | ACCEPT_TYPES;
 

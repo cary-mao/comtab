@@ -92,16 +92,21 @@ export default class PanelView extends View {
       handle: '.' + CLASSES.PANE_HANDLE,
       start: () => {
         ShareData.setTask('panelDragStart');
+        ShareData.value.type = 'panelDragging';
         this.notify(new ViewEvent(false), 'panelDragStart', this.host);
         // ShareData.resetTask();
       }
     });
     this._$header.droppable({
       tolerance: 'pointer',
+      greedy: true,
       drop: () => {
         if (ShareData.value.type === 'tmpPanelFromTabDrag') {
+          this.notify(new ViewEvent(), 'insertTmpPanelToTabHeader', this.host);
+
           return;
         }
+
         ShareData.setTask('insertPanelToTabHeader');
         this.notify(new ViewEvent(), 'insertPanelToTabHeader', this.host);
         // ShareData.resetTask();

@@ -15,7 +15,14 @@ export default class PanelGroup {
   }
 
   private _init () {
+    const state = this._model.getState();
     this._view.create();
+
+    state.matrix.forEach(r => r.forEach(c => c._controller.setParent(this._controller)));
+  }
+
+  deletePanel () {
+    
   }
 
   get state () {

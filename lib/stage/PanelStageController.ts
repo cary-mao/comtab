@@ -31,8 +31,7 @@ export default class PanelStageController extends Controller {
   }
   
   dispatchView (event: ModelEvent, type: string, payload) {
-    if (type === 'tmpPanelFromTabDrag') {
-      ShareData.value.task = type;
+    if (type === 'tmpPanelFromTabDrop') {
       const originPanel = ShareData.value.tab.getParent();
       // delete origin tab
       originPanel.deleteTab(ShareData.value.tab);
@@ -44,7 +43,8 @@ export default class PanelStageController extends Controller {
       this._model.addPanel(ShareData.value.panel);
       // })
       // reset the type
-      ShareData.resetWithoutTask();
+      // ShareData.resetWithoutTask();
+      // ShareData.value.type = 'init'
     }
   }
 }

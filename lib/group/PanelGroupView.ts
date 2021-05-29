@@ -1,5 +1,6 @@
 import CLASSES from "../classes";
 import View from "../mvc/View";
+import Panel from "../panel/Panel";
 import { Position } from "../panel/PanelModel";
 import PanelView from "../panel/PanelView";
 import { createElementWithClass } from "../utils";
@@ -17,8 +18,11 @@ export default class PanelGroupView extends View {
   }
 
   create () {
+    const state = this._model.getState();
+
     this._$wrapper = createElementWithClass(CLASSES.PANE_GROUP);
     this.refreshPosition();
+    state.matrix.forEach(r => r.forEach(c => this.addPanel(c)));
   }
 
   getElements () {
@@ -31,53 +35,61 @@ export default class PanelGroupView extends View {
     this._$wrapper.css('z-index', zIndex);
   }
 
+  addPanel (panel: Panel) {
+    this._$wrapper.append(panel._view.getElements().wrapper);
+  }
+
   refreshPosition () {
     const state = this._model.getState();
-
-    const wrapperPosition = state.autoPos ? state.matrix[0][0].getPosition() : state.position;
-    this.setPosition(wrapperPosition)
     
-    // the column width is refer to first row.
-    let offsetX = [0];
-    let offsetY = [];
-    let data = [];
+    const wrapperPosition = state.position ? state.position : state.matrix[0][0].getPosition();
+    this.setPosition(wrapperPosition);
 
-    for (let rowIdx = 0, rowLen = state.matrix.length; rowIdx < rowLen; rowIdx++) {
-      const row = state.matrix[rowIdx];
-      for (let colIdx = 0, colLen = row.length; colIdx < colLen; colIdx++) {
-        const panel = row[colIdx];
-
-        if (!data[rowIdx]) {
-          data[rowIdx] = [];
+    if (state.autoPos) {
+      // the column width is refer to first row.
+      let data = [];
+      let offsetX = [0];
+      let offsetY = [];
+      for (let rowIdx = 0, rowLen = state.matrix.length; rowIdx < rowLen; rowIdx++) {
+        const row = state.matrix[rowIdx];
+        for (let colIdx = 0, colLen = row.length; colIdx < colLen; colIdx++) {
+          const panel = row[colIdx];
+  
+          if (!data[rowIdx]) {
+            data[rowIdx] = [];
+          }
+  
+          data[rowIdx][colIdx] = {};
+  
+          if (rowIdx === 0) {
+            // record horizontal offset of column
+            offsetX[colIdx + 1] = offsetX[colIdx] + panel.width;
+            data[rowIdx][colIdx].left = offsetX[colIdx];
+          } else {
+            data[rowIdx][colIdx].width = state.matrix[0][colIdx].width;
+          }
+  
+          // offsetY records vertical offset of each column 
+          if (!offsetY[colIdx]) {
+            offsetY[colIdx] = [0];
+            // data[colIdx] = [];
+          }
+  
+          offsetY[colIdx][rowIdx + 1] = offsetY[colIdx][rowIdx] + panel.height;
+          data[rowIdx][colIdx].top =  offsetY[colIdx][rowIdx];
         }
-
-        data[rowIdx][colIdx] = {};
-
-        if (rowIdx === 0) {
-          offsetX[rowIdx + 1] = offsetX[rowIdx] + panel.width;
-          data[rowIdx][colIdx].left = offsetX[rowIdx];
-        } else {
-          data[rowIdx][colIdx].width = state.matrix[0][colIdx].width;
-        }
-
-        if (!offsetY[colIdx]) {
-          offsetY[colIdx] = [0];
-          data[colIdx] = [];
-        }
-
-        offsetY[colIdx][rowIdx + 1] = offsetY[colIdx][rowIdx] + panel.height;
-        data[rowIdx][colIdx].top =  offsetY[colIdx][rowIdx];
       }
-    }
 
-    data.forEach((r, ri) => {
-      r.forEach((c, ci) => {
-        state.matrix[ri][ci].setPosition(c);
-        if (c.width) {
-          state.matrix[ri][ci].setSize(c);
-        }
+      data.forEach((r, ri) => {
+        r.forEach((c, ci) => {
+          const panel = state.matrix[ri][ci];
+          panel.setPosition(c);
+          if (c.width) {
+            panel.setSize(c);
+          }
+        });
       });
-    })
+    }
   }
 
   setPosition(wrapperPosition: Position) {

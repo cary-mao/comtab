@@ -1,4 +1,5 @@
 import CLASSES from "../classes";
+import PanelGroup from "../group/PanelGroup";
 import ViewEvent from "../mvc/events/ViewEvent";
 import View from "../mvc/View";
 import Panel from "../panel/Panel";
@@ -13,12 +14,17 @@ export default class PanelStageView extends View {
   create (state: PanelStageState) {
     this._$wrapper = $(state.stage as JQuery.PlainObject).addClass(CLASSES.STAGE);
     state.panels.forEach(p => this.addPanel(p));
+    state.groups.forEach(g => this.addGroup(g));
 
     this.bindEvents();
   }
 
   addPanel (panel: Panel) {
     this._$wrapper.append(panel._view.getElements().wrapper);
+  }
+
+  addGroup (group: PanelGroup) {
+    this._$wrapper.append(group._view.getElements().wrapper);
   }
 
   deletePanel (panel: Panel) {
@@ -30,8 +36,9 @@ export default class PanelStageView extends View {
       drop: (event, ui) => {
         const type = ShareData.value.type;
         if (type === 'tmpPanelFromTabDrag') {
-          ShareData.setTask('tmpPanelFromTabDrag');
-          this.notify(new ViewEvent(), 'tmpPanelFromTabDrag', ui);
+          ShareData.setTask('tmpPanelFromTabDrop');
+          ShareData.value.type = 'tmpPanelFromTabDrop';
+          this.notify(new ViewEvent(), 'tmpPanelFromTabDrop', ui);
           // ShareData.resetTask();
         }
       }
