@@ -14,6 +14,7 @@
     }
   },
   "scripts": {
+    "prepare": "husky install",
     "dev": "vite serve",
     "build": "vite build",
     "serve": "vite build && vite preview"
@@ -51,7 +52,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npx lint-staged"
     }
   },
   "lint-staged": {
