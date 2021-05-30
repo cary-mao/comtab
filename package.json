@@ -30,9 +30,6 @@
     "csso-cli": "^3.0.0",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^7.27.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-define-config": "^1.0.8",
-    "eslint-plugin-prettier": "^3.4.0",
     "gzip-cli": "^1.2.0",
     "husky": "^6.0.0",
     "lint-staged": "^11.0.0",
@@ -58,7 +55,7 @@
     }
   },
   "lint-staged": {
-    "*.{.ts,.tsx}": [
+    "lib/**/*.{.ts,.tsx}": [
       "prettier --write",
       "eslint --cache --fix",
       "git add"
