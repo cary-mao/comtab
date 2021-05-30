@@ -55,7 +55,7 @@
     }
   },
   "lint-staged": {
-    "lib/**/*.{.ts,.tsx}": [
+    "lib/**/*.ts": [
       "prettier --write",
       "eslint --cache --fix",
       "git add"
