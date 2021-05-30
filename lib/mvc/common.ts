@@ -1,10 +1,10 @@
 /**
  * common logic
  */
-import Controller from "./Controller";
-import MVCEvent from "./events/Event";
-import Model from "./Model";
-import View from "./View";
+import Controller from './Controller';
+import MVCEvent from './events/Event';
+import Model from './Model';
+import View from './View';
 
 /**
  * notify the updated to controller
@@ -15,7 +15,7 @@ export interface notifyFn {
   (event: MVCEvent, ...args): void;
 }
 
-export function notify (fn: Function, thisArg, args) {
+export function notify(fn: Function, thisArg, args) {
   Reflect.apply(fn, thisArg, args);
 }
 
@@ -24,7 +24,7 @@ export function notify (fn: Function, thisArg, args) {
  * @param {Controller} controller
  * @param {Model | View} other
  */
-export function bindOthers (controller: Controller, other: Model | View) {
+export function bindOthers(controller: Controller, other: Model | View) {
   this._controller = controller;
   if (this instanceof Model) {
     (this as Model).linkView(other as View);

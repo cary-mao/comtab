@@ -51,10 +51,11 @@
     "lodash": "^4.17.21"
   },
   "lint-staged": {
+    "*.js": "eslint --cache --fix",
+    "*.{js,css,md}": "prettier --write",
     "lib/**/*.ts": [
-      "prettier --write",
-      "eslint --cache --fix",
-      "git add"
+      "prettier --write",
+      "eslint --cache --fix"
     ]
   }
 }

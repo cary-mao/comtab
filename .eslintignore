@@ -1,3 +1,4 @@
 .eslintrc.js
 dist
 public
+vite.config.js
