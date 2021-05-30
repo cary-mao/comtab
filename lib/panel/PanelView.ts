@@ -1,11 +1,11 @@
-import View from "../mvc/View";
-import PanelTab from "../tab/PanelTab";
-import CLASSES from "../classes";
-import { createElementWithClass } from "../utils";
-import PanelModel, { Position } from "./PanelModel";
-import Panel from "./Panel";
-import ViewEvent from "../mvc/events/ViewEvent";
-import ShareData from "../share";
+import View from '../mvc/View';
+import PanelTab from '../tab/PanelTab';
+import CLASSES from '../classes';
+import { createElementWithClass } from '../utils';
+import PanelModel, { Position } from './PanelModel';
+import Panel from './Panel';
+import ViewEvent from '../mvc/events/ViewEvent';
+import ShareData from '../share';
 
 export default class PanelView extends View {
   private _$wrapper: JQuery;
@@ -15,13 +15,8 @@ export default class PanelView extends View {
   host: Panel;
   events: {
     panelDrag?: JQuery;
-    clickActivateFn?: JQuery.TypeEventHandler<
-      HTMLElement,
-      undefined,
-      HTMLElement,
-      HTMLElement,
-      "mousedown"
-    >;
+    headerSplit?: JQuery;
+    clickActivateFn?: JQuery.TypeEventHandler<HTMLElement, undefined, HTMLElement, HTMLElement, 'mousedown'>;
   } = {};
 
   constructor(host: Panel) {
@@ -29,27 +24,31 @@ export default class PanelView extends View {
     this.host = host;
   }
 
-  splitFromContainer() { }
+  setHeaderSplitEvent(enable: boolean) {
+    this.events.headerSplit.draggable(enable ? 'enable' : 'disable');
+  }
+
+  splitFromContainer() {}
 
   setHandleVisble(visible: boolean) {
-    const fn = visible ? "show" : "hide";
+    const fn = visible ? 'show' : 'hide';
     this._$panelHandle[fn]();
   }
 
-  setClickActivateEvent(enable: boolean = true) {
-    const fn = enable ? "on" : "off";
+  setClickActivateEvent(enable = true) {
+    const fn = enable ? 'on' : 'off';
     // @ts-ignore
-    this._$wrapper[fn]("mousedown", this.events.clickActivateFn);
+    this._$wrapper[fn]('mousedown', this.events.clickActivateFn);
   }
 
-  setDragEvent(enable: boolean = true) {
-    this.events.panelDrag.draggable(enable ? "enable" : "disable");
+  setDragEvent(enable = true) {
+    this.events.panelDrag.draggable(enable ? 'enable' : 'disable');
   }
 
   setSize(size: { width?: number; height?: number }) {
     this._$wrapper.css({
-      width: size.width ? size.width + "px" : undefined,
-      height: size.height ? size.height + "px" : undefined,
+      width: size.width ? size.width + 'px' : undefined,
+      height: size.height ? size.height + 'px' : undefined
     });
   }
 
@@ -74,7 +73,7 @@ export default class PanelView extends View {
   }
 
   setZIndex(zIndex: number) {
-    this._$wrapper.css("z-index", zIndex);
+    this._$wrapper.css('z-index', zIndex);
   }
 
   setTabSplitEvent(enable: boolean) {
@@ -91,8 +90,8 @@ export default class PanelView extends View {
 
   setPosition(position: Position) {
     this._$wrapper.css({
-      left: position.left + "px",
-      top: position.top + "px",
+      left: position.left + 'px',
+      top: position.top + 'px'
     });
   }
 
@@ -108,38 +107,54 @@ export default class PanelView extends View {
     });
 
     this.bindEvents();
+
+    const state = this._model.getState();
+    if (!state._headerSplitEnabled) {
+      this.setHeaderSplitEvent(false);
+    }
   }
 
   bindEvents() {
+    this.events.headerSplit = this._$header.draggable({
+      // handle can't equal to draggable host(this._$header)
+      // handle: '.' + CLASSES.TAB_HEADER,
+      cancel: '.' + CLASSES.TAB_BTN,
+      helper: () => {
+        const panel = Panel.copy(this.host);
+        panel._model.setHandleVisible(false);
+        panel._view.setZIndex(this.host.getPanelLayer().getTopZIndex() + 1);
+        return panel._view.getElements().wrapper;
+      }
+    });
     this.events.clickActivateFn = () => {
-      ShareData.setTask("activatePanel");
+      ShareData.setTask('activatePanel');
       this._model.activate();
       // ShareData.resetTask();
     };
-    this._$wrapper.on("mousedown", this.events.clickActivateFn);
+    this._$wrapper.on('mousedown', this.events.clickActivateFn);
     this.events.panelDrag = this._$wrapper.draggable({
-      handle: "." + CLASSES.PANE_HANDLE,
+      handle: '.' + CLASSES.PANE_HANDLE,
       start: () => {
-        ShareData.setTask("panelDragStart");
-        ShareData.value.type = "panelDragging";
-        this.notify(new ViewEvent(false), "panelDragStart", this.host);
+        ShareData.setTask('panelDragStart');
+        ShareData.value.type = 'panelDragging';
+        this.notify(new ViewEvent(false), 'panelDragStart', this.host);
         // ShareData.resetTask();
-      },
+      }
     });
     this._$header.droppable({
-      tolerance: "pointer",
+      tolerance: 'pointer',
       greedy: true,
       drop: () => {
-        if (ShareData.value.type === "tmpPanelFromTabDrag") {
-          this.notify(new ViewEvent(), "insertTmpPanelToTabHeader", this.host);
+        if (ShareData.value.type === 'tmpPanelFromTabDrag') {
+          this.notify(new ViewEvent(), 'insertTmpPanelToTabHeader', this.host);
 
           return;
         }
 
-        ShareData.setTask("insertPanelToTabHeader");
-        this.notify(new ViewEvent(), "insertPanelToTabHeader", this.host);
+        ShareData.setTask('insertPanelToTabHeader');
+        this.notify(new ViewEvent(), 'insertPanelToTabHeader', this.host);
         // ShareData.resetTask();
-      },
+      }
     });
   }
 
@@ -156,7 +171,7 @@ export default class PanelView extends View {
     return {
       wrapper: this._$wrapper,
       handle: this._$panelHandle,
-      header: this._$header,
+      header: this._$header
     };
   }
 }

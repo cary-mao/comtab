@@ -16,6 +16,7 @@ interface PanelState {
   _tabSplitEnabled: boolean;
   _dragEnabled: boolean;
   _clickActivateEnabled: boolean;
+  _headerSplitEnabled: boolean;
   width: number;
   height: number;
 }
@@ -40,7 +41,7 @@ export default class PanelModel extends Model {
     this.notify(new ModelEvent(false), 'setHandleVisible', visible);
   }
   protected _view: PanelView;
-  setSize(size: { width?: number; height?: number; }) {
+  setSize(size: { width?: number; height?: number }) {
     this._view.setSize(size);
   }
   setZIndex(zIndex: number) {
@@ -57,6 +58,7 @@ export default class PanelModel extends Model {
     _tabSplitEnabled: true,
     _dragEnabled: true,
     _clickActivateEnabled: true,
+    _headerSplitEnabled: false,
     width: 200,
     height: 200
   };
@@ -106,6 +108,11 @@ export default class PanelModel extends Model {
   toggleClickActivateEnabled(enable?: boolean) {
     this._state._clickActivateEnabled = isDef(enable) ? enable : !this._state._clickActivateEnabled;
     this.notify(new ModelEvent(false), 'toggleClickActivateEnabled', this._state._clickActivateEnabled);
+  }
+
+  toggleHeaderSplitEnabled(enable?: boolean) {
+    this._state._headerSplitEnabled = isDef(enable) ? enable : !this._state._headerSplitEnabled;
+    this.notify(new ModelEvent(false), 'toggleHeaderSplitEnabled', this._state._headerSplitEnabled);
   }
 
   getState() {

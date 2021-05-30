@@ -1,11 +1,11 @@
-import CLASSES from "../classes";
-import ViewEvent from "../mvc/events/ViewEvent";
-import View from "../mvc/View";
-import Panel from "../panel/Panel";
-import { createElementWithClass, isDef } from "../utils";
-import PanelTab from "./PanelTab";
-import PanelTabController from "./PanelTabController";
-import PanelTabModel, { PanelTabState } from "./PanelTabModel";
+import CLASSES from '../classes';
+import ViewEvent from '../mvc/events/ViewEvent';
+import View from '../mvc/View';
+import Panel from '../panel/Panel';
+import { createElementWithClass, isDef } from '../utils';
+import PanelTab from './PanelTab';
+import PanelTabController from './PanelTabController';
+import PanelTabModel, { PanelTabState } from './PanelTabModel';
 import ShareData from '../share';
 
 export default class PanelTabView extends View {
@@ -25,16 +25,16 @@ export default class PanelTabView extends View {
     tabSplit?: JQuery;
   } = {};
 
-  constructor (host: PanelTab) {
+  constructor(host: PanelTab) {
     super();
     this.host = host;
   }
 
-  create (state?: PanelTabState) {
+  create(state?: PanelTabState) {
     state = state || this._model.getState();
     this._$btn = createElementWithClass(CLASSES.TAB_BTN).text(state.btnText);
     this._$content = $(state.content as JQuery.PlainObject).addClass(CLASSES.TAB_CONTENT);
-    
+
     if (state.actived) {
       this.activate();
     }
@@ -42,7 +42,7 @@ export default class PanelTabView extends View {
     this.bindEvents();
   }
 
-  bindEvents () {
+  bindEvents() {
     this._$btn.on('click', () => {
       ShareData.setTask('activateTab');
       this._model.activate();
@@ -61,32 +61,32 @@ export default class PanelTabView extends View {
     });
   }
 
-  toggleTabSplitEvent (enable?: boolean) {
+  toggleTabSplitEvent(enable?: boolean) {
     enable = isDef(enable) ? enable : this.events.tabSplit.draggable('option', 'disabled');
-    
+
     const t = this.events.tabSplit;
     // this.events.tabSplit.draggable(enable ? 'enable' : 'disable');
     this.events.tabSplit.draggable(enable ? 'enable' : 'disable');
   }
 
-  activate () {
+  activate() {
     this._$content.addClass(CLASSES.TAB_CONTENT_ACTIVE);
     this._$btn.addClass(CLASSES.TAB_BTN_ACTIVE);
   }
 
-  deactivate () {
+  deactivate() {
     this._$content.removeClass(CLASSES.TAB_CONTENT_ACTIVE);
     this._$btn.removeClass(CLASSES.TAB_BTN_ACTIVE);
   }
 
-  getElements () {
+  getElements() {
     return {
       btn: this._$btn,
       content: this._$content
-    }
+    };
   }
 
-  remove () {
+  remove() {
     this._$btn.remove();
     this._$content.remove();
   }

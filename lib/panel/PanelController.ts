@@ -1,13 +1,13 @@
-import PanelGroupController from "../group/PanelGroupController";
-import Controller from "../mvc/Controller";
-import ModelEvent from "../mvc/events/ModelEvent";
-import ViewEvent from "../mvc/events/ViewEvent";
-import ShareData from "../share";
-import PanelStageController from "../stage/PanelStageController";
-import PanelTab from "../tab/PanelTab";
-import Panel from "./Panel";
-import PanelModel, { Position } from "./PanelModel";
-import PanelView from "./PanelView";
+import PanelGroupController from '../group/PanelGroupController';
+import Controller from '../mvc/Controller';
+import ModelEvent from '../mvc/events/ModelEvent';
+import ViewEvent from '../mvc/events/ViewEvent';
+import ShareData from '../share';
+import PanelStageController from '../stage/PanelStageController';
+import PanelTab from '../tab/PanelTab';
+import Panel from './Panel';
+import PanelModel, { Position } from './PanelModel';
+import PanelView from './PanelView';
 
 export default class PanelController extends Controller {
   protected _model!: PanelModel;
@@ -23,7 +23,7 @@ export default class PanelController extends Controller {
   dispatchModel(event: ModelEvent, type: string, payload) {
     // activatePanel is executed by stage
     if (type === 'activateTab') {
-      this._model.getState().tabs.forEach(t => {
+      this._model.getState().tabs.forEach((t) => {
         // debugger
         const model = t._model;
         const isActived = model.getState().actived;
@@ -54,10 +54,12 @@ export default class PanelController extends Controller {
       this._view.setDragEvent(payload);
     } else if (type === 'toggleClickActivateEnabled') {
       this._view.setClickActivateEvent(payload);
+    } else if (type === 'toggleHeaderSplitEnabled') {
+      this._view.setHeaderSplitEvent(payload);
     } else if (type === 'setZIndex') {
       this._view.setZIndex(payload);
     } else if (type === 'addTabs') {
-      (payload as Array<PanelTab>).forEach(t => {
+      (payload as Array<PanelTab>).forEach((t) => {
         t._controller.setParent(this);
       });
       this._view.addTabs(payload);
@@ -79,7 +81,7 @@ export default class PanelController extends Controller {
         this._parent._parent.host.deletePanel(draggingPanel);
       }
 
-      draggingPanel.state.tabs.forEach(t => {
+      draggingPanel.state.tabs.forEach((t) => {
         t._model.deactivate(new ModelEvent(false));
         t._view.create();
       });
@@ -93,7 +95,7 @@ export default class PanelController extends Controller {
       ShareData.value.panel._view.create();
       ShareData.value.panel.setPosition(payload.offset);
       originPanel._view.refreshTabSplitEvent();
-      ShareData.value.panel.state.tabs.forEach(t => {
+      ShareData.value.panel.state.tabs.forEach((t) => {
         t._model.deactivate(new ModelEvent(false));
         t._view.create();
       });

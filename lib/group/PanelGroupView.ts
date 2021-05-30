@@ -35,6 +35,7 @@ export default class PanelGroupView extends View {
       r.forEach((c) => {
         c._model.toggleDragEvent(false);
         c._model.toggleClickActivateEnabled(false);
+        c._model.toggleHeaderSplitEnabled(true);
 
         // hide the handle
         if (ri !== 0) {
@@ -80,9 +81,9 @@ export default class PanelGroupView extends View {
 
     if (state.autoPos) {
       // the column width is refer to first row.
-      let data = [];
-      let offsetX = [0];
-      let offsetY = [];
+      const data = [];
+      const offsetX = [0];
+      const offsetY = [];
       for (let rowIdx = 0, rowLen = state.matrix.length; rowIdx < rowLen; rowIdx++) {
         const row = state.matrix[rowIdx];
         for (let colIdx = 0, colLen = row.length; colIdx < colLen; colIdx++) {

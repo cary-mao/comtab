@@ -5,10 +5,12 @@
     "source.fixAll": true
   },
   "eslint.validate": ["typescript"],
-  // 默认使用prettier格式化支持的文件
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   // 自动设定eslint工作区
   "eslint.workingDirectories": [{ "mode": "auto" }],
   "editor.formatOnSave": true,
-  "eslint.format.enable": true
+  "eslint.format.enable": true,
+  // 默认使用prettier格式化支持的文件
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

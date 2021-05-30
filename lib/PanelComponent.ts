@@ -1,4 +1,4 @@
-import {merge} from './utils';
+import { merge } from './utils';
 
 /**
  * A MVC-Based Component
@@ -8,21 +8,17 @@ export default class PanelComponent<T> {
   private _oldState: T;
   private _state: T;
 
-  setState (state: T) {
+  setState(state: T) {
     this._oldState = this._state;
     merge(this._state, state);
     this.render();
   }
 
-  render () {
+  render() {}
 
-  }
+  _diff(oldState: T, state: T) {}
 
-  _diff (oldState: T, state: T) {
-    
-  }
-
-  static isComponent (value) {
-    return value instanceof PanelComponent
+  static isComponent(value) {
+    return value instanceof PanelComponent;
   }
 }

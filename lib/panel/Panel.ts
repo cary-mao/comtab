@@ -1,10 +1,20 @@
-import ModelEvent from "../mvc/events/ModelEvent";
-import PanelTab from "../tab/PanelTab";
-import PanelController from "./PanelController";
+import PanelGroupController from '../group/PanelGroupController';
+import ModelEvent from '../mvc/events/ModelEvent';
+import PanelStageController from '../stage/PanelStageController';
+import PanelTab from '../tab/PanelTab';
+import { cloneDeep } from '../utils';
+import PanelController from './PanelController';
 import PanelModel, { PanelOptions, Position } from './PanelModel';
-import PanelView from "./PanelView";
+import PanelView from './PanelView';
 
 export default class Panel {
+  getPanelLayer() {
+    let groupOrStageController = this._controller.getParent();
+    if (groupOrStageController instanceof PanelGroupController) {
+      groupOrStageController = groupOrStageController.getParent();
+    }
+    return (groupOrStageController as PanelStageController).host.panelLayer;
+  }
   // only can be use by father component outside
   _model: PanelModel;
   _view: PanelView;
@@ -33,7 +43,7 @@ export default class Panel {
   }
 
   setPosition(position?: Position) {
-    this._model.setPosition(position)
+    this._model.setPosition(position);
   }
 
   private _init() {
@@ -41,12 +51,12 @@ export default class Panel {
     this._view.create();
     this._view.setPosition(state.position);
     this._view.setSize({ width: state.width, height: state.height });
-    state.tabs.forEach(t => t._controller.setParent(this._controller));
+    state.tabs.forEach((t) => t._controller.setParent(this._controller));
 
     this._view.refreshTabSplitEvent();
   }
 
-  setSize(size: { width?: number, height?: number }) {
+  setSize(size: { width?: number; height?: number }) {
     this._model.setSize(size);
   }
 
@@ -55,15 +65,19 @@ export default class Panel {
   }
 
   static copyPanelByTabs(...tabs: Array<PanelTab>) {
-    const copyTabs = tabs.map(t => {
+    const copyTabs = tabs.map((t) => {
       const copyTab = PanelTab.copy(t);
       copyTab._model.activate(new ModelEvent(false));
       return copyTab;
-    })
+    });
 
     return new Panel({
       tabs: copyTabs
     });
+  }
+
+  static copy(panel: Panel) {
+    return new Panel(cloneDeep(panel._model.getState()));
   }
 
   get width() {
