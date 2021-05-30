@@ -12,12 +12,12 @@ export default class PanelStageController extends Controller {
   protected _view: PanelStageView;
   host!: PanelStage;
 
-  constructor (model: PanelStageModel, view: PanelStageView, host: PanelStage) {
+  constructor(model: PanelStageModel, view: PanelStageView, host: PanelStage) {
     super(model, view);
     this.host = host;
   }
 
-  dispatchModel (event: ModelEvent, type: string, payload) {
+  dispatchModel(event: ModelEvent, type: string, payload) {
     if (type === 'addPanel') {
       this.host.panelLayer.add(payload);
       (payload as Panel)._controller.setParent(this);
@@ -31,8 +31,8 @@ export default class PanelStageController extends Controller {
       this.host.panelLayer.activate(payload);
     }
   }
-  
-  dispatchView (event: ModelEvent, type: string, payload) {
+
+  dispatchView(event: ModelEvent, type: string, payload) {
     if (type === 'tmpPanelFromTabDrop') {
       const originPanel = ShareData.value.tab.getParent();
       // delete origin tab

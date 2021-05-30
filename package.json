@@ -24,12 +24,22 @@
     "@types/jquery": "^3.5.5",
     "@types/jqueryui": "^1.12.15",
     "@types/lodash": "^4.14.168",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
     "autoprefixer": "^10.2.5",
     "csso-cli": "^3.0.0",
     "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-define-config": "^1.0.8",
+    "eslint-plugin-prettier": "^3.4.0",
     "gzip-cli": "^1.2.0",
+    "husky": "^6.0.0",
+    "lint-staged": "^11.0.0",
     "npm-run-all": "^4.1.5",
+    "prettier": "^2.3.0",
     "stylus": "^0.54.8",
+    "typescript": "^4.3.2",
     "uglify-js": "^3.12.7",
     "vite": "^2.2.4"
   },
@@ -41,5 +51,17 @@
   "dependencies": {
     "jquery": "^3.6.0",
     "lodash": "^4.17.21"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{.ts,.tsx}": [
+      "prettier --write",
+      "eslint --cache --fix",
+      "git add"
+    ]
   }
 }

@@ -13,23 +13,23 @@ export default class PanelLayer {
   private _panelCount = 0;
   private _topZIndex = 0;
 
-  getCount () {
+  getCount() {
     return this._panelCount;
   }
 
-  getTopZIndex () {
+  getTopZIndex() {
     return this._topZIndex;
   }
 
-  add (panel: LayerObject) {
+  add(panel: LayerObject) {
     const id = panel.state.id;
     this._panelMap[id] = panel;
     this._topZIndex = this._panelCount++;
-    panel.setZIndex(this._panelCount-1);
+    panel.setZIndex(this._panelCount - 1);
   }
 
-  remove (panel: LayerObject) {
-    var matchPanel = this._panelMap[panel.state.id];
+  remove(panel: LayerObject) {
+    const matchPanel = this._panelMap[panel.state.id];
     // fix:bug maybe panel was destoryed by group
     if (!matchPanel) return;
     // normalize panel layer
@@ -41,13 +41,13 @@ export default class PanelLayer {
     this._panelCount--;
   }
 
-  activate (panel: LayerObject) {
+  activate(panel: LayerObject) {
     // not the top-level layer
     if (panel.state.zIndex !== this._topZIndex) {
-      for (var k in this._panelMap) {
-        var v = this._panelMap[k]
+      for (const k in this._panelMap) {
+        const v = this._panelMap[k]
         if (v.state.zIndex > panel.state.zIndex) {
-          v.setZIndex(v.state.zIndex-1);
+          v.setZIndex(v.state.zIndex - 1);
         }
       }
       panel.setZIndex(this._topZIndex);

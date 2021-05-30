@@ -1,11 +1,11 @@
-import CLASSES from "../classes";
-import View from "../mvc/View";
-import Panel from "../panel/Panel";
-import { Position } from "../panel/PanelModel";
-import PanelView from "../panel/PanelView";
-import { createElementWithClass } from "../utils";
-import PanelGroup from "./PanelGroup";
-import PanelGroupModel from "./PanelGroupModel";
+import CLASSES from '../classes';
+import View from '../mvc/View';
+import Panel from '../panel/Panel';
+import { Position } from '../panel/PanelModel';
+import PanelView from '../panel/PanelView';
+import { createElementWithClass } from '../utils';
+import PanelGroup from './PanelGroup';
+import PanelGroupModel from './PanelGroupModel';
 import ShareData from '../share';
 
 export default class PanelGroupView extends View {
@@ -13,26 +13,26 @@ export default class PanelGroupView extends View {
   host: PanelGroup;
   private _$wrapper: JQuery;
 
-  constructor (host: PanelGroup) {
+  constructor(host: PanelGroup) {
     super();
     this.host = host;
   }
 
-  create () {
+  create() {
     const state = this._model.getState();
 
     this._$wrapper = createElementWithClass(CLASSES.PANE_GROUP);
     this.refreshPosition();
-    state.matrix.forEach(r => r.forEach(c => this.addPanel(c)));
+    state.matrix.forEach((r) => r.forEach((c) => this.addPanel(c)));
 
     this.restrictPanels();
     this.bindEvents();
   }
 
-  restrictPanels () {
+  restrictPanels() {
     const state = this._model.getState();
     state.matrix.forEach((r, ri) => {
-      r.forEach(c => {
+      r.forEach((c) => {
         c._model.toggleDragEvent(false);
         c._model.toggleClickActivateEnabled(false);
 
@@ -44,37 +44,37 @@ export default class PanelGroupView extends View {
     });
   }
 
-  bindEvents () {
+  bindEvents() {
     this._$wrapper.on('mousedown', () => {
       ShareData.setTask('activateGroup');
       this._model.activate();
     });
     this._$wrapper.draggable({
       handle: '.' + CLASSES.PANE_HANDLE,
-      start () {
+      start() {
         ShareData.setTask('groupDragging');
         ShareData.value.type = 'groupDragging';
       }
     });
   }
 
-  getElements () {
+  getElements() {
     return {
       wrapper: this._$wrapper
-    }
+    };
   }
 
-  setZIndex (zIndex: number) {
+  setZIndex(zIndex: number) {
     this._$wrapper.css('z-index', zIndex);
   }
 
-  addPanel (panel: Panel) {
+  addPanel(panel: Panel) {
     this._$wrapper.append(panel._view.getElements().wrapper);
   }
 
-  refreshPosition () {
+  refreshPosition() {
     const state = this._model.getState();
-    
+
     const wrapperPosition = state.position ? state.position : state.matrix[0][0].getPosition();
     this.setPosition(wrapperPosition);
 
@@ -87,13 +87,13 @@ export default class PanelGroupView extends View {
         const row = state.matrix[rowIdx];
         for (let colIdx = 0, colLen = row.length; colIdx < colLen; colIdx++) {
           const panel = row[colIdx];
-  
+
           if (!data[rowIdx]) {
             data[rowIdx] = [];
           }
-  
+
           data[rowIdx][colIdx] = {};
-  
+
           if (rowIdx === 0) {
             // record horizontal offset of column
             offsetX[colIdx + 1] = offsetX[colIdx] + panel.width;
@@ -101,15 +101,15 @@ export default class PanelGroupView extends View {
           } else {
             data[rowIdx][colIdx].width = state.matrix[0][colIdx].width;
           }
-  
-          // offsetY records vertical offset of each column 
+
+          // offsetY records vertical offset of each column
           if (!offsetY[colIdx]) {
             offsetY[colIdx] = [0];
             // data[colIdx] = [];
           }
-  
+
           offsetY[colIdx][rowIdx + 1] = offsetY[colIdx][rowIdx] + panel.height;
-          data[rowIdx][colIdx].top =  offsetY[colIdx][rowIdx];
+          data[rowIdx][colIdx].top = offsetY[colIdx][rowIdx];
         }
       }
 

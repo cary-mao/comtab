@@ -9,23 +9,23 @@ export default class PanelStage {
   private _view: PanelStageView;
   private _controller: PanelStageController;
   panelLayer: PanelLayer = new PanelLayer();
-  
-  constructor (state: PanelStageOptions) {
+
+  constructor(state: PanelStageOptions) {
     this._model = new PanelStageModel(state);
     this._view = new PanelStageView();
     this._controller = new PanelStageController(this._model, this._view, this);
     this._init();
   }
 
-  addPanel (panel: Panel) {
+  addPanel(panel: Panel) {
     this._model.addPanel(panel);
   }
 
-  deletePanel (panel: Panel) {
+  deletePanel(panel: Panel) {
     this._model.deletePanel(panel);
   }
 
-  private _init () {
+  private _init() {
     const state = this._model.getState();
     this._view.create(state);
     state.panels.forEach(p => {

@@ -1,10 +1,10 @@
-import ModelEvent from "../mvc/events/ModelEvent";
-import Model from "../mvc/Model";
-import Panel from "../panel/Panel";
-import { Position } from "../panel/PanelModel";
-import { genId, merge } from "../utils";
-import PanelGroup from "./PanelGroup";
-import PanelGroupView from "./PanelGroupView";
+import ModelEvent from '../mvc/events/ModelEvent';
+import Model from '../mvc/Model';
+import Panel from '../panel/Panel';
+import { Position } from '../panel/PanelModel';
+import { genId, merge } from '../utils';
+import PanelGroup from './PanelGroup';
+import PanelGroupView from './PanelGroupView';
 
 type GroupMatrix = Array<Array<Panel>>;
 
@@ -36,18 +36,18 @@ export default class PanelGroupModel extends Model {
   protected _view: PanelGroupView;
   host: PanelGroup;
 
-  constructor (opts: PanelGroupOptions, host: PanelGroup) {
-    super()
+  constructor(opts: PanelGroupOptions, host: PanelGroup) {
+    super();
     this.host = host;
     merge(this._state, opts);
   }
 
-  setZIndex (zIndex: number) {
+  setZIndex(zIndex: number) {
     this._state.zIndex = zIndex;
     this.notify(new ModelEvent(false), 'setZIndex', zIndex);
   }
 
-  getState () {
+  getState() {
     return this._state;
   }
 }

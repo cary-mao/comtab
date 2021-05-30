@@ -49,66 +49,66 @@ export default class PanelModel extends Model {
   }
   private _state: PanelState = {
     id: genId('panel'),
-    position: {left: 0, top: 0},
+    position: { left: 0, top: 0 },
     zIndex: 0,
     actived: false,
     tabs: [],
     handleVisible: true,
     _tabSplitEnabled: true,
     _dragEnabled: true,
-    _clickActivateEnabled: true, 
+    _clickActivateEnabled: true,
     width: 200,
     height: 200
   };
   host: Panel;
 
-  constructor (opts: PanelOptions, host: Panel) {
+  constructor(opts: PanelOptions, host: Panel) {
     super();
     merge(this._state, opts);
     this.host = host;
   }
 
-  setPosition (position) {
+  setPosition(position) {
     merge(this._state.position, position);
     this.notify(new ModelEvent(false), 'setPanelPosition', this._state.position);
   }
 
-  activate () {
+  activate() {
     this._state.actived = true;
     this.notify(new ModelEvent(), 'activatePanel', this.host);
   }
 
-  deactivate () {
+  deactivate() {
     this._state.actived = false;
     this.notify(new ModelEvent(), 'deactivatePanel');
   }
 
   deleteTab(tab: PanelTab) {
     pull(this._state.tabs, tab);
-    this.notify(new ModelEvent(), 'deleteTab', {tab});
+    this.notify(new ModelEvent(), 'deleteTab', { tab });
   }
 
-  addTabs (...tabs: Array<PanelTab>) {
+  addTabs(...tabs: Array<PanelTab>) {
     this._state.tabs = this._state.tabs.concat(tabs);
     this.notify(new ModelEvent(false), 'addTabs', tabs);
   }
 
-  toggleTabSplitEvent (enable?: boolean) {
+  toggleTabSplitEvent(enable?: boolean) {
     this._state._tabSplitEnabled = isDef(enable) ? enable : !this._state._tabSplitEnabled;
     this.notify(new ModelEvent(false), 'toggleTabSplitEvent', this._state._tabSplitEnabled);
   }
 
-  toggleDragEvent (enable?: boolean) {
+  toggleDragEvent(enable?: boolean) {
     this._state._dragEnabled = isDef(enable) ? enable : !this._state._dragEnabled;
     this.notify(new ModelEvent(false), 'togglePanelDragEvent', this._state._dragEnabled);
   }
 
-  toggleClickActivateEnabled (enable?: boolean) {
+  toggleClickActivateEnabled(enable?: boolean) {
     this._state._clickActivateEnabled = isDef(enable) ? enable : !this._state._clickActivateEnabled;
     this.notify(new ModelEvent(false), 'toggleClickActivateEnabled', this._state._clickActivateEnabled);
   }
 
-  getState () {
+  getState() {
     return this._state;
   }
 }

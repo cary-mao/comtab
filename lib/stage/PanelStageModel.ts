@@ -23,22 +23,22 @@ export default class PanelStageModel extends Model {
     stage: 'body'
   };
 
-  constructor (state: PanelStageOptions) {
+  constructor(state: PanelStageOptions) {
     super();
     merge(this._state, state);
     // init components //
   }
 
-  getState () {
+  getState() {
     return this._state;
   }
 
-  addPanel (panel: Panel) {
+  addPanel(panel: Panel) {
     this._state.panels.push(panel);
     this.notify(new ModelEvent(false), 'addPanel', panel);
   }
 
-  deletePanel (panel: Panel) {
+  deletePanel(panel: Panel) {
     pull(this._state.panels, panel);
     this.notify(new ModelEvent(false), 'deletePanel', panel);
   }

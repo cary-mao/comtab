@@ -15,7 +15,7 @@ export default class PanelController extends Controller {
   protected _parent!: PanelStageController | PanelGroupController;
   host!: Panel;
 
-  constructor (model: PanelModel, view: PanelView, host: Panel) {
+  constructor(model: PanelModel, view: PanelView, host: Panel) {
     super(model, view);
     this.host = host;
   }
@@ -78,14 +78,14 @@ export default class PanelController extends Controller {
       } else if (this._parent instanceof PanelGroupController) {
         this._parent._parent.host.deletePanel(draggingPanel);
       }
-      
+
       draggingPanel.state.tabs.forEach(t => {
         t._model.deactivate(new ModelEvent(false));
         t._view.create();
       });
       // ShareData.resetWithoutTask();
       Reflect.apply(this._model.addTabs, this._model, draggingPanel.state.tabs);
-      
+
       event.stopPropagation();
     } else if (type === 'insertTmpPanelToTabHeader') {
       const originPanel = ShareData.value.tab.getParent();
@@ -97,12 +97,12 @@ export default class PanelController extends Controller {
         t._model.deactivate(new ModelEvent(false));
         t._view.create();
       });
-      
+
       Reflect.apply(this._model.addTabs, this._model, ShareData.value.panel.state.tabs);
       event.stopPropagation();
     }
   }
-  getModel () {
+  getModel() {
     return this._model;
   }
 }
