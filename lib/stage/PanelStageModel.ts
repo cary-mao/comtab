@@ -1,8 +1,8 @@
-import PanelGroup from "../group/PanelGroup";
-import ModelEvent from "../mvc/events/ModelEvent";
-import Model from "../mvc/Model";
-import Panel from "../panel/Panel";
-import { pull, merge } from "../utils";
+import PanelGroup from '../group/PanelGroup';
+import ModelEvent from '../mvc/events/ModelEvent';
+import Model from '../mvc/Model';
+import Panel from '../panel/Panel';
+import { pull, merge } from '../utils';
 
 export interface PanelStageState {
   panels: Array<Panel>;
@@ -17,6 +17,10 @@ export interface PanelStageOptions {
 }
 
 export default class PanelStageModel extends Model {
+  deleteGroup(host: PanelGroup) {
+    pull(this._state, host);
+    this.notify(new ModelEvent(), 'deleteGroup', host);
+  }
   private _state: PanelStageState = {
     panels: [],
     groups: [],

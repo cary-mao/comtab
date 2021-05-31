@@ -53,13 +53,18 @@ export default class PanelView extends View {
     });
   }
 
-  refreshTabSplitEvent() {
+  /**
+   *
+   * @param force force refresh split event even if state._tabSplitEnabled is right.
+   * @returns
+   */
+  refreshTabSplitEvent(force = false) {
     const state = this._model.getState();
-    if (state.tabs.length <= 1 && state._tabSplitEnabled) {
+    if (state.tabs.length <= 1 && (state._tabSplitEnabled || force)) {
       this._model.toggleTabSplitEvent(false);
       return;
     }
-    if (state.tabs.length > 1 && !state._tabSplitEnabled) {
+    if (state.tabs.length > 1 && (!state._tabSplitEnabled || force)) {
       this._model.toggleTabSplitEvent(true);
       return;
     }
@@ -127,7 +132,8 @@ export default class PanelView extends View {
         panel._view.setZIndex(this.host.getPanelLayer().getTopZIndex() + 1);
         ShareData.setTask('splitPanelFromGroup');
         ShareData.value.type = 'splitPanelFromGroup';
-        ShareData.value.panel = this.host;
+        ShareData.value.panel = panel;
+        ShareData.value.origin = this.host;
         return panel._view.getElements().wrapper;
       }
     });
@@ -150,7 +156,7 @@ export default class PanelView extends View {
       tolerance: 'pointer',
       greedy: true,
       accept() {
-        return ShareData.value.type === 'tmpPanelFromTabDrag';
+        return ['tmpPanelFromTabDrag', 'panelDragging'].some((v) => v === ShareData.value.type);
       },
       drop: () => {
         if (ShareData.value.type === 'tmpPanelFromTabDrag') {

@@ -30,6 +30,9 @@ export default class PanelStageController extends Controller {
       this.host.panelLayer.activate(payload);
     } else if (type === 'activateGroup') {
       this.host.panelLayer.activate(payload);
+    } else if (type === 'deleteGroup') {
+      this.host.panelLayer.remove(payload);
+      this._view.deleteGroup(payload);
     }
   }
 
@@ -49,10 +52,29 @@ export default class PanelStageController extends Controller {
       // ShareData.resetWithoutTask();
       // ShareData.value.type = 'init'
     } else if (type === 'splitPanelFromGroupDrop') {
+      const origin = ShareData.value.origin;
       const panel = ShareData.value.panel;
-      const group = ShareData.value.panel.getParent() as PanelGroup;
+      const group = origin.getParent() as PanelGroup;
 
-      group._model.deletePanel(panel);
+      panel._view.create();
+      panel._model.setGroupIdxes(null);
+      panel._model.toggleClickActivateEnabled(true);
+      panel._model.toggleDragEvent(true);
+      panel._model.toggleHeaderSplitEnabled(false);
+      // panel.state.tabs.forEach((t) => {
+      //   t._view.destoryEvents();
+      //   t._view.bindEvents();
+      // });
+      panel._view.refreshTabSplitEvent(true);
+
+      /**
+       * fix: bug cannot call methods on draggable prior to initialization; attempted to call method 'destroy'
+       * because remove the origin element will delete the instance in $.data(this, fullName)
+       */
+      group._model.deletePanel(origin);
+
+      panel.setPosition(payload.offset);
+      this._model.addPanel(panel);
     }
   }
 }

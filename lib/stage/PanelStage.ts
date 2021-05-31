@@ -1,3 +1,4 @@
+import PanelGroup from '../group/PanelGroup';
 import Panel from '../panel/Panel';
 import PanelLayer from './PanelLayer';
 import PanelStageController from './PanelStageController';
@@ -5,6 +6,9 @@ import PanelStageModel, { PanelStageOptions } from './PanelStageModel';
 import PanelStageView from './PanelStageView';
 
 export default class PanelStage {
+  deleteGroup(host: PanelGroup) {
+    this._model.deleteGroup(host);
+  }
   private _model: PanelStageModel;
   private _view: PanelStageView;
   private _controller: PanelStageController;
@@ -28,15 +32,15 @@ export default class PanelStage {
   private _init() {
     const state = this._model.getState();
     this._view.create(state);
-    state.panels.forEach(p => {
+    state.panels.forEach((p) => {
       p._controller.setParent(this._controller);
       this.panelLayer.add(p);
     });
-    state.groups.forEach(g => {
+    state.groups.forEach((g) => {
       g._controller.setParent(this._controller);
       // remove the panel from panelLayer
       // and add group in panelLayer
-      g.state.matrix.forEach(r => r.forEach(c => this.panelLayer.remove(c)));
+      g.state.matrix.forEach((r) => r.forEach((c) => this.panelLayer.remove(c)));
       this.panelLayer.add(g);
     });
   }

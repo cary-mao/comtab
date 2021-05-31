@@ -9,6 +9,10 @@ import PanelGroupModel from './PanelGroupModel';
 import ShareData from '../share';
 
 export default class PanelGroupView extends View {
+  freePanel(panel: Panel) {
+    panel.setPosition(this._model.getState().position);
+    this.host.getParent().addPanel(panel);
+  }
   deletePanel(panel: Panel) {
     panel._view.getElements().wrapper.remove();
     this.restrictPanels();

@@ -34,6 +34,7 @@ export interface PanelOptions {
   tabs?: Array<PanelTab>;
   width?: number;
   height?: number;
+  groupIdxes?: [number, number];
 }
 
 export default class PanelModel extends Model {

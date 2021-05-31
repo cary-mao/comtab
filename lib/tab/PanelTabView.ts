@@ -23,6 +23,7 @@ export default class PanelTabView extends View {
   host: PanelTab;
   events: {
     tabSplit?: JQuery;
+    btnClickFn?: JQuery.TypeEventHandler<HTMLElement, undefined, HTMLElement, HTMLElement, 'mousedown'>;
   } = {};
 
   constructor(host: PanelTab) {
@@ -39,14 +40,19 @@ export default class PanelTabView extends View {
       this.activate();
     }
 
+    if (state._tabHandleEnabled) {
+      this.toggleTabHandleEvent(true);
+    }
+
     this.bindEvents();
   }
 
   bindEvents() {
-    this._$btn.on('click', () => {
+    this.events.btnClickFn = () => {
       ShareData.setTask('activateTab');
       this._model.activate();
-    });
+    };
+    this._$btn.on('mousedown', this.events.btnClickFn);
     this.events.tabSplit = this._$btn.draggable({
       delay: 200,
       helper: () => {
@@ -59,6 +65,11 @@ export default class PanelTabView extends View {
         return newPanel._view.getElements().wrapper;
       }
     });
+  }
+
+  destoryEvents() {
+    this._$btn.off('mousedown', this.events.btnClickFn);
+    this.events.tabSplit.draggable('destroy');
   }
 
   toggleTabSplitEvent(enable?: boolean) {

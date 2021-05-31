@@ -7,6 +7,9 @@ import ShareData from '../share';
 import PanelStageModel, { PanelStageState } from './PanelStageModel';
 
 export default class PanelStageView extends View {
+  deleteGroup(group: PanelGroup) {
+    group._view.getElements().wrapper.remove();
+  }
   private _$wrapper: JQuery;
   protected _model: PanelStageModel;
 

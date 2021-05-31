@@ -77,7 +77,17 @@ export default class Panel {
   }
 
   static copy(panel: Panel) {
-    return new Panel(cloneDeep(panel._model.getState()));
+    const state = panel.state;
+    const copyTabs = state.tabs.map((t) => {
+      const copyTab = PanelTab.copy(t);
+      // copyTab._model.activate(new ModelEvent(false));
+      return copyTab;
+    });
+
+    return new Panel({
+      ...cloneDeep(state),
+      tabs: copyTabs
+    });
   }
 
   get width() {
