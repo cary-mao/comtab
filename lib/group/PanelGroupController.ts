@@ -19,6 +19,8 @@ export default class PanelGroupController extends Controller {
   dispatchModel(event: ModelEvent, type: string, payload) {
     if (type === 'setZIndex') {
       this._view.setZIndex(payload);
+    } else if (type === 'deletePanel') {
+      this._view.deletePanel(payload);
     }
   }
   dispatchView(event: ViewEvent, ...args: any[]) {

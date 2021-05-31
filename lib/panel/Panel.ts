@@ -87,4 +87,8 @@ export default class Panel {
   get height() {
     return this._model.getState().height;
   }
+
+  getParent() {
+    return (this._controller.getParent() as PanelGroupController | PanelStageController).host;
+  }
 }

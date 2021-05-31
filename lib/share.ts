@@ -3,15 +3,22 @@ import Logger from './mvc/logger';
 import Panel from './panel/Panel';
 import PanelTab from './tab/PanelTab';
 
-type ACCEPT_TYPES = 'insertPanelToTabHeader' | 'panelDragging' | 'tmpPanelFromTabDrop' | 'groupDragging';
-
-type SharedDataType = 'init' | 'tmpPanelFromTabDrag' | ACCEPT_TYPES;
+type SharedDataType =
+  | 'init'
+  | 'tmpPanelFromTabDrag'
+  | 'insertPanelToTabHeader'
+  | 'panelDragging'
+  | 'tmpPanelFromTabDrop'
+  | 'groupDragging'
+  | 'splitPanelFromGroup'
+  | 'splitPanelFromGroupDrop';
 
 interface SharedData {
   type: SharedDataType;
   panel?: Panel;
   tab?: PanelTab;
   task: string;
+  origin?: Panel;
   readonly debugger: boolean;
 }
 
@@ -25,13 +32,13 @@ const data: SharedData = {
 export const logger = new Logger();
 
 class SharedDataProxy extends DataProxy<SharedData> {
-  setTask (task: string) {
+  setTask(task: string) {
     this.value.task = task;
   }
   // resetTask () {
   //   this.value.task = 'init';
   // }
-  resetWithoutTask () {
+  resetWithoutTask() {
     const task = this.value.task;
     this.reset();
     this.setTask(task);

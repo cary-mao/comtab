@@ -6,6 +6,7 @@ import PanelModel, { Position } from './PanelModel';
 import Panel from './Panel';
 import ViewEvent from '../mvc/events/ViewEvent';
 import ShareData from '../share';
+import PanelStage from '../stage/PanelStage';
 
 export default class PanelView extends View {
   private _$wrapper: JQuery;
@@ -119,10 +120,14 @@ export default class PanelView extends View {
       // handle can't equal to draggable host(this._$header)
       // handle: '.' + CLASSES.TAB_HEADER,
       cancel: '.' + CLASSES.TAB_BTN,
+      delay: 300,
       helper: () => {
         const panel = Panel.copy(this.host);
         panel._model.setHandleVisible(false);
         panel._view.setZIndex(this.host.getPanelLayer().getTopZIndex() + 1);
+        ShareData.setTask('splitPanelFromGroup');
+        ShareData.value.type = 'splitPanelFromGroup';
+        ShareData.value.panel = this.host;
         return panel._view.getElements().wrapper;
       }
     });
@@ -144,6 +149,9 @@ export default class PanelView extends View {
     this._$header.droppable({
       tolerance: 'pointer',
       greedy: true,
+      accept() {
+        return ShareData.value.type === 'tmpPanelFromTabDrag';
+      },
       drop: () => {
         if (ShareData.value.type === 'tmpPanelFromTabDrag') {
           this.notify(new ViewEvent(), 'insertTmpPanelToTabHeader', this.host);

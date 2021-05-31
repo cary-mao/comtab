@@ -9,6 +9,11 @@ import PanelGroupModel from './PanelGroupModel';
 import ShareData from '../share';
 
 export default class PanelGroupView extends View {
+  deletePanel(panel: Panel) {
+    panel._view.getElements().wrapper.remove();
+    this.restrictPanels();
+    this.refreshPosition();
+  }
   protected _model: PanelGroupModel;
   host: PanelGroup;
   private _$wrapper: JQuery;
@@ -32,10 +37,19 @@ export default class PanelGroupView extends View {
   restrictPanels() {
     const state = this._model.getState();
     state.matrix.forEach((r, ri) => {
-      r.forEach((c) => {
-        c._model.toggleDragEvent(false);
-        c._model.toggleClickActivateEnabled(false);
-        c._model.toggleHeaderSplitEnabled(true);
+      r.forEach((c, ci) => {
+        // not in group before
+        if (!c.state.groupIdxes) {
+          c._model.toggleDragEvent(false);
+          c._model.toggleClickActivateEnabled(false);
+          c._model.toggleHeaderSplitEnabled(true);
+        } else {
+          if (c.state.groupIdxes[0] === 1) {
+            c._model.setHandleVisible(true);
+          }
+        }
+
+        c._model.setGroupIdxes([ri, ci]);
 
         // hide the handle
         if (ri !== 0) {
@@ -55,6 +69,9 @@ export default class PanelGroupView extends View {
       start() {
         ShareData.setTask('groupDragging');
         ShareData.value.type = 'groupDragging';
+      },
+      drag: (event, ui) => {
+        this._model.setPosition(ui.position, false);
       }
     });
   }

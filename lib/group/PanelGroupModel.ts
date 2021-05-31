@@ -2,7 +2,7 @@ import ModelEvent from '../mvc/events/ModelEvent';
 import Model from '../mvc/Model';
 import Panel from '../panel/Panel';
 import { Position } from '../panel/PanelModel';
-import { genId, merge } from '../utils';
+import { genId, merge, zip } from '../utils';
 import PanelGroup from './PanelGroup';
 import PanelGroupView from './PanelGroupView';
 
@@ -23,6 +23,12 @@ export interface PanelGroupOptions {
 }
 
 export default class PanelGroupModel extends Model {
+  setPosition(position: Position, notify = true) {
+    this._state.position = position;
+    if (notify) {
+      this.notify(new ModelEvent(false), 'setPosition', position);
+    }
+  }
   activate() {
     this.notify(new ModelEvent(), 'activateGroup', this.host);
   }
@@ -40,6 +46,31 @@ export default class PanelGroupModel extends Model {
     super();
     this.host = host;
     merge(this._state, opts);
+  }
+
+  deletePanel(panel: Panel) {
+    const matrix = this._state.matrix;
+    const [r, c] = panel.state.groupIdxes;
+    if (this._state.matrix[r][c] === panel) {
+      const matrixT = zip(matrix);
+      matrixT[c].splice(r, 1);
+
+      if (matrixT[c].length === 0) {
+        matrixT.splice(c, 1);
+      }
+
+      const result = [];
+      zip(matrixT).forEach((r, ri) => {
+        const cArr = r.filter((c) => !!c);
+        if (cArr.length) {
+          result[ri] = cArr;
+        }
+      });
+
+      this._state.matrix = result;
+
+      this.notify(new ModelEvent(false), 'deletePanel', panel);
+    }
   }
 
   setZIndex(zIndex: number) {

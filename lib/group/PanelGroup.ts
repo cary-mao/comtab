@@ -1,4 +1,5 @@
 import PanelStage from '../stage/PanelStage';
+import PanelStageController from '../stage/PanelStageController';
 import PanelGroupController from './PanelGroupController';
 import PanelGroupModel, { PanelGroupOptions } from './PanelGroupModel';
 import PanelGroupView from './PanelGroupView';
@@ -32,5 +33,9 @@ export default class PanelGroup {
 
   setZIndex(zIndex: number) {
     this._model.setZIndex(zIndex);
+  }
+
+  getParent() {
+    return (this._controller.getParent() as PanelStageController).host;
   }
 }

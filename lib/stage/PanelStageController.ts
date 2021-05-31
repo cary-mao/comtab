@@ -1,11 +1,12 @@
-import Controller from "../mvc/Controller";
-import ModelEvent from "../mvc/events/ModelEvent";
-import Panel from "../panel/Panel";
-import PanelStage from "./PanelStage";
-import PanelStageModel from "./PanelStageModel";
-import PanelStageView from "./PanelStageView";
+import Controller from '../mvc/Controller';
+import ModelEvent from '../mvc/events/ModelEvent';
+import Panel from '../panel/Panel';
+import PanelStage from './PanelStage';
+import PanelStageModel from './PanelStageModel';
+import PanelStageView from './PanelStageView';
 import ShareData from '../share';
-import PanelController from "../panel/PanelController";
+import PanelController from '../panel/PanelController';
+import PanelGroup from '../group/PanelGroup';
 
 export default class PanelStageController extends Controller {
   protected _model!: PanelStageModel;
@@ -47,6 +48,11 @@ export default class PanelStageController extends Controller {
       // reset the type
       // ShareData.resetWithoutTask();
       // ShareData.value.type = 'init'
+    } else if (type === 'splitPanelFromGroupDrop') {
+      const panel = ShareData.value.panel;
+      const group = ShareData.value.panel.getParent() as PanelGroup;
+
+      group._model.deletePanel(panel);
     }
   }
 }

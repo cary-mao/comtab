@@ -19,6 +19,7 @@ interface PanelState {
   _headerSplitEnabled: boolean;
   width: number;
   height: number;
+  groupIdxes: [number, number];
 }
 
 export interface Position {
@@ -36,6 +37,9 @@ export interface PanelOptions {
 }
 
 export default class PanelModel extends Model {
+  setGroupIdxes(idxes: [number, number]) {
+    this._state.groupIdxes = idxes;
+  }
   setHandleVisible(visible: boolean) {
     this._state.handleVisible = visible;
     this.notify(new ModelEvent(false), 'setHandleVisible', visible);
@@ -60,7 +64,8 @@ export default class PanelModel extends Model {
     _clickActivateEnabled: true,
     _headerSplitEnabled: false,
     width: 200,
-    height: 200
+    height: 200,
+    groupIdxes: null
   };
   host: Panel;
 
