@@ -11,6 +11,10 @@ import ShareData from '../share';
 export default class PanelGroupView extends View {
   freePanel(panel: Panel) {
     panel.setPosition(this._model.getState().position);
+    panel._model.setGroupIdxes(null);
+    panel._model.toggleDragEvent(true);
+    panel._model.toggleClickActivateEnabled(true);
+    panel._model.toggleHeaderSplitEnabled(false);
     this.host.getParent().addPanel(panel);
   }
   deletePanel(panel: Panel) {

@@ -3,7 +3,7 @@
   background-color: #4d4d4d;
   overflow: hidden;
 }
-  
+
 .comtab-panel {
   width: 200px;
   position: absolute !important;
@@ -41,7 +41,7 @@
 }
 
 .comtab-panel-dropready {
-  opacity: .3;
+  opacity: 0.3;
 }
 
 .comtab-panel_gutter-active {
@@ -80,6 +80,7 @@
   padding: 1px 6px;
   color: #f0f0f0;
   background-color: #484848;
+  user-select: none;
 }
 
 .comtab-tab_btn-active {
@@ -126,11 +127,12 @@
   right: -2px;
 }
 
-html, body, .comtab-stage {
+html,
+body,
+.comtab-stage {
   position: relative;
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
 }
-  

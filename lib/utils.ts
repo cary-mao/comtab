@@ -9,6 +9,10 @@
  */
 import _ from 'lodash';
 
+export function values<V>(value: { [key: string]: V }): Array<V> {
+  return _.values(value);
+}
+
 export function assign(object, ...source) {
   return _.assign(object, source);
 }

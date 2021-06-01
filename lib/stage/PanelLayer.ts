@@ -1,6 +1,6 @@
-import PanelGroup from "../group/PanelGroup";
-import Panel from "../panel/Panel";
-import { _createPureObject } from "../utils";
+import PanelGroup from '../group/PanelGroup';
+import Panel from '../panel/Panel';
+import { values, _createPureObject } from '../utils';
 
 type LayerObject = Panel | PanelGroup;
 
@@ -33,11 +33,15 @@ export default class PanelLayer {
     // fix:bug maybe panel was destoryed by group
     if (!matchPanel) return;
     // normalize panel layer
-    // only keep the max zindex correct, not reset
     if (this._topZIndex === matchPanel.state.zIndex) {
       this._topZIndex--;
     }
     delete this._panelMap[panel.state.id];
+    // reset zIndex, because remove the other panel if not reset, it will make a mistake
+    // that exist two panels have same zIndex
+    const arr = values(this._panelMap).sort((a, b) => a.state.zIndex - b.state.zIndex);
+    arr.forEach((v, i) => i === v.state.zIndex || v.setZIndex(i));
+
     this._panelCount--;
   }
 
@@ -45,7 +49,7 @@ export default class PanelLayer {
     // not the top-level layer
     if (panel.state.zIndex !== this._topZIndex) {
       for (const k in this._panelMap) {
-        const v = this._panelMap[k]
+        const v = this._panelMap[k];
         if (v.state.zIndex > panel.state.zIndex) {
           v.setZIndex(v.state.zIndex - 1);
         }
